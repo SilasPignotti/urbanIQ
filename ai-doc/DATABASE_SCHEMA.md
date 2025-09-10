@@ -14,7 +14,7 @@ CREATE TABLE jobs (
     status TEXT NOT NULL CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
     request_text TEXT NOT NULL,
     bezirk TEXT,
-    categories TEXT,  -- JSON Array: ["transport", "environment"]
+    datasets TEXT,  -- JSON Array: ["bezirksgrenzen", "gebaeude", "oepnv_haltestellen"]
     progress INTEGER DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
     result_package_id TEXT,
     error_message TEXT,
@@ -29,7 +29,7 @@ CREATE TABLE jobs (
 - `status`: Current processing status (pending → processing → completed/failed)
 - `request_text`: Original user request in natural language
 - `bezirk`: Extracted Berlin district name
-- `categories`: JSON array of requested data categories
+- `datasets`: JSON array of requested datasets (MVP: gebaeude, oepnv_haltestellen) - district boundaries always included
 - `progress`: Processing progress percentage (0-100)
 - `result_package_id`: Reference to generated package (when completed)
 - `error_message`: Error details (when failed)
@@ -102,16 +102,28 @@ CREATE TABLE data_sources (
 - `active`: Whether source is currently available
 - `last_tested`/`test_status`: Health check information
 
-## Available Categories
+## Available Datasets (MVP)
 
-The system supports the following data categories:
+The initial implementation supports the following datasets:
 
-- **administrative**: District boundaries, administrative areas
-- **transport**: Streets, public transport, cycling infrastructure
-- **environment**: Parks, water bodies, environmental monitoring
-- **social_infrastructure**: Schools, hospitals, cultural facilities
-- **demographics**: Population data, census information
-- **urban_planning**: Zoning, building permits, development areas
+**Always Included** (automatic retrieval):
+
+- **bezirksgrenzen**: Administrative district boundaries from Berlin Geoportal
+  - Source: Berlin Geoportal WFS
+  - Layer: `fis:re_bezirke`
+  - License: CC BY 3.0 DE
+  - Purpose: Spatial filtering for all other datasets
+
+**On Request** (user-specified):
+
+- **gebaeude**: Building footprints and data from Berlin Geoportal
+  - Source: Berlin Geoportal WFS
+  - Layer: `fis:alkis_gebaeude`
+  - License: CC BY 3.0 DE
+- **oepnv_haltestellen**: Public transport stops from OpenStreetMap
+  - Source: OpenStreetMap Overpass API
+  - Query: `public_transport=stop_position`
+  - License: Open Database License (ODbL)
 
 ## Database Configuration
 

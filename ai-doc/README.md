@@ -12,7 +12,9 @@ This directory contains comprehensive technical documentation for the urbanIQ Be
 
 ### Implementation Guides
 
+- **[IMPLEMENTATION_ROADMAP.md](./IMPLEMENTATION_ROADMAP.md)** - Complete implementation plan with 14 structured PRPs
 - **[BUILD_INSTRUCTIONS.md](./BUILD_INSTRUCTIONS.md)** - Step-by-step build and setup guide
+- **[CONNECTOR_SPECIFICATIONS.md](./CONNECTOR_SPECIFICATIONS.md)** - Detailed API specifications and connector implementations
 - **[FRONTEND_IMPLEMENTATION.md](./FRONTEND_IMPLEMENTATION.md)** - HTMX and Tailwind CSS frontend guide
 - **[TESTING_STRATEGY.md](./TESTING_STRATEGY.md)** - Comprehensive testing approach and examples
 
