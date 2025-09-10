@@ -262,20 +262,162 @@ Closes #[issue-number]
 ````
 
 ### **PR Creation Command**
+
+#### **Step 1: Remote Branch Status Check**
+
 ```bash
-# Push current branch
-git push origin $(git branch --show-current)
+echo "🔍 Checking remote branch status..."
+
+CURRENT_BRANCH=$(git branch --show-current)
+echo "📍 Current branch: $CURRENT_BRANCH"
+
+# Check if remote branch exists
+REMOTE_EXISTS=$(git ls-remote --heads origin $CURRENT_BRANCH)
+
+if [ -z "$REMOTE_EXISTS" ]; then
+    echo "🆕 Remote branch doesn't exist - will create and push"
+    NEED_PUSH=true
+    COMMITS_AHEAD=0
+else
+    echo "✅ Remote branch exists - checking sync status"
+
+    # Fetch latest to ensure accurate comparison
+    git fetch origin $CURRENT_BRANCH
+
+    # Check ahead/behind status
+    AHEAD_BEHIND=$(git rev-list --left-right --count origin/$CURRENT_BRANCH...$CURRENT_BRANCH 2>/dev/null || echo "0	0")
+    COMMITS_BEHIND=$(echo $AHEAD_BEHIND | cut -f1)
+    COMMITS_AHEAD=$(echo $AHEAD_BEHIND | cut -f2)
+
+    echo "📊 Branch status:"
+    echo "   📈 Commits ahead of remote: $COMMITS_AHEAD"
+    echo "   📉 Commits behind remote: $COMMITS_BEHIND"
+
+    if [ $COMMITS_AHEAD -gt 0 ]; then
+        echo "⚠️  Local branch has unpushed commits"
+        NEED_PUSH=true
+    else
+        echo "✅ Local branch is up-to-date with remote"
+        NEED_PUSH=false
+    fi
+
+    if [ $COMMITS_BEHIND -gt 0 ]; then
+        echo "⚠️  Warning: Remote branch has newer commits!"
+        echo "🔄 Consider running 'sync-with-main' command first"
+        read -p "Continue anyway? (y/N): " continue_choice
+        if [[ ! $continue_choice =~ ^[Yy]$ ]]; then
+            echo "❌ PR creation cancelled. Please sync first."
+            exit 1
+        fi
+    fi
+fi
+
+echo ""
+```
+
+#### **Step 2: Push if Needed**
+
+```bash
+if [ "$NEED_PUSH" = true ]; then
+    echo "📤 Pushing local commits to remote..."
+
+    if [ -z "$REMOTE_EXISTS" ]; then
+        # First push - set upstream tracking
+        echo "🆕 Creating and setting upstream branch..."
+        git push -u origin $CURRENT_BRANCH
+    else
+        # Regular push
+        git push origin $CURRENT_BRANCH
+    fi
+
+    # Check push success
+    if [ $? -eq 0 ]; then
+        echo "✅ Successfully pushed $COMMITS_AHEAD commit(s) to origin/$CURRENT_BRANCH"
+    else
+        echo "❌ Push failed! Cannot create PR without remote branch."
+        echo "🔧 Possible issues:"
+        echo "   - Network connection problem"
+        echo "   - Remote branch conflicts"
+        echo "   - Permission issues"
+        exit 1
+    fi
+else
+    echo "✅ Remote branch is already up-to-date - skipping push"
+fi
+
+echo ""
+```
+
+#### **Step 3: Create Pull Request**
+
+```bash
+echo "🔄 Creating Pull Request..."
+
+# Check if GitHub CLI is available
+if ! command -v gh &> /dev/null; then
+    echo "⚠️  GitHub CLI not found. Creating PR manually:"
+    echo "🔗 Open this URL: https://github.com/SilasPignotti/urbanIQ/compare/main...$CURRENT_BRANCH"
+    echo "📋 Use the PR template from .github/pull_request_template.md"
+    exit 0
+fi
+
+# Check if user is authenticated
+if ! gh auth status &> /dev/null; then
+    echo "⚠️  GitHub CLI not authenticated. Creating PR manually:"
+    echo "🔗 Open this URL: https://github.com/SilasPignotti/urbanIQ/compare/main...$CURRENT_BRANCH"
+    echo "💡 To setup GitHub CLI: gh auth login"
+    exit 0
+fi
+
+# Generate PR title from recent commits
+RECENT_COMMITS=$(git log --oneline main..$CURRENT_BRANCH --reverse | head -5)
+COMMIT_COUNT=$(echo "$RECENT_COMMITS" | wc -l | tr -d ' ')
+
+if [ $COMMIT_COUNT -eq 1 ]; then
+    # Single commit - use its message as title
+    PR_TITLE=$(echo "$RECENT_COMMITS" | cut -d' ' -f2-)
+else
+    # Multiple commits - create descriptive title
+    BRANCH_TYPE=$(echo $CURRENT_BRANCH | cut -d'/' -f1)
+    BRANCH_NAME=$(echo $CURRENT_BRANCH | cut -d'/' -f2- | sed 's/-/ /g')
+    PR_TITLE="$BRANCH_TYPE: $BRANCH_NAME"
+fi
+
+echo "📝 PR Title: $PR_TITLE"
+echo "📊 Commits in PR: $COMMIT_COUNT"
+echo ""
 
 # Create PR using GitHub CLI
+echo "🚀 Creating Pull Request..."
 gh pr create \
-  --title "[Auto-generated title based on commits]" \
-  --body-file .github/pr_body.md \
+  --title "$PR_TITLE" \
+  --body "$(cat .github/pull_request_template.md 2>/dev/null || echo 'Automated PR creation - please fill in details')" \
   --base main \
-  --head $(git branch --show-current) \
+  --head $CURRENT_BRANCH \
   --assignee @me
 
-# Alternative: Provide GitHub URL for manual creation
-echo "Create PR at: https://github.com/[user]/[repo]/compare/main...$(git branch --show-current)"
+if [ $? -eq 0 ]; then
+    echo "✅ Pull Request created successfully!"
+    echo ""
+
+    # Show PR details
+    PR_URL=$(gh pr view $CURRENT_BRANCH --json url --jq '.url')
+    echo "🔗 PR URL: $PR_URL"
+    echo "📋 Next steps:"
+    echo "   1. Review and update PR description if needed"
+    echo "   2. Wait for CI/CD checks to complete"
+    echo "   3. Request reviews if needed"
+    echo "   4. Merge when ready"
+
+    # Optionally open PR in browser
+    read -p "📖 Open PR in browser? (y/N): " open_choice
+    if [[ $open_choice =~ ^[Yy]$ ]]; then
+        gh pr view $CURRENT_BRANCH --web
+    fi
+else
+    echo "❌ Failed to create PR with GitHub CLI"
+    echo "🔗 Manual creation URL: https://github.com/SilasPignotti/urbanIQ/compare/main...$CURRENT_BRANCH"
+fi
 ````
 
 ## 🔄 CI/CD Pipeline Setup
