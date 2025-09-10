@@ -124,3 +124,8 @@ celerybeat-schedule
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Claude Code directories
+.claude/
+ai-doc/
+PRP/
