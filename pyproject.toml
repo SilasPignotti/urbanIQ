@@ -1,0 +1,234 @@
+[project]
+name = "urbaniq"
+version = "0.1.0"
+description = "Intelligent geodata aggregation system for automated district analysis in Berlin"
+authors = [
+    { name = "urbanIQ Development Team", email = "dev@urbaniq.berlin" }
+]
+license = "MIT"
+requires-python = ">=3.11"
+keywords = ["geodata", "berlin", "urban-planning", "gis", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+
+dependencies = [
+    # Web Framework
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "jinja2>=3.1.2",
+    
+    # Database & ORM
+    "sqlmodel>=0.0.14",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.13.0",
+    
+    # Geodata Processing
+    "geopandas>=0.14.0",
+    "shapely>=2.0.0",
+    "fiona>=1.9.0",
+    "pyproj>=3.6.0",
+    "gdal>=3.7.0",
+    
+    # LLM Integration
+    "langchain>=0.1.0",
+    "langchain-google-genai>=1.0.0",
+    "google-generativeai>=0.3.0",
+    
+    # Data Handling
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "pandas>=2.1.0",
+    
+    # HTTP Client
+    "httpx>=0.25.0",
+    
+    # Utilities
+    "python-multipart>=0.0.6",
+    "python-dotenv>=1.0.0",
+    "structlog>=23.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "httpx>=0.25.0",  # for async test client
+    
+    # Code Quality
+    "ruff>=0.1.6",
+    "mypy>=1.7.0",
+    "pre-commit>=3.5.0",
+    
+    # Type Stubs
+    "types-requests>=2.31.0",
+    
+    # Development Tools
+    "ipython>=8.17.0",
+    "ipykernel>=6.26.0",
+]
+
+production = [
+    # Production ASGI Server
+    "gunicorn>=21.2.0",
+    
+    # Database Driver for Production
+    "psycopg2-binary>=2.9.0",
+    
+    # Monitoring
+    "prometheus-client>=0.19.0",
+]
+
+[project.urls]
+Documentation = "https://github.com/urbaniq-berlin/urbaniq"
+Repository = "https://github.com/urbaniq-berlin/urbaniq"
+Issues = "https://github.com/urbaniq-berlin/urbaniq/issues"
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+# UV Configuration
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "ruff>=0.1.6",
+    "mypy>=1.7.0",
+    "pre-commit>=3.5.0",
+    "types-requests>=2.31.0",
+    "ipython>=8.17.0",
+    "ipykernel>=6.26.0",
+]
+
+# Ruff Configuration
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# Enable specific rule categories
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "PTH",    # flake8-use-pathlib
+]
+
+# Ignore specific rules
+ignore = [
+    "E501",   # line too long (handled by line-length)
+    "B008",   # do not perform function calls in argument defaults (FastAPI depends)
+    "UP007",  # use X | Y for type unions (keep compatibility)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ARG001",  # unused function argument in tests
+    "S101",    # use of assert in tests
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+force-single-line = false
+
+# MyPy Configuration
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+    "geopandas.*",
+    "fiona.*",
+    "shapely.*",
+    "gdal.*",
+    "pyproj.*",
+    "langchain.*",
+    "langchain_google_genai.*",
+    "google.generativeai.*",
+]
+ignore_missing_imports = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+# Pytest Configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow tests",
+    "external: Tests requiring external services",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "*/tests/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+precision = 2
+
+[tool.coverage.html]
+directory = "htmlcov"
