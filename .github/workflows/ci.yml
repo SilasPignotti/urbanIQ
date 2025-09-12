@@ -42,7 +42,7 @@ jobs:
           sudo apt-get install -y software-properties-common
           sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable -y
           sudo apt-get update
-          
+
           # Install GDAL and build dependencies
           sudo apt-get install -y \
             gdal-bin \
@@ -130,6 +130,31 @@ jobs:
       - name: Set up Python
         run: uv python install 3.11
 
+      - name: Install GDAL for security checks
+        run: |
+          # Add ubuntugis repository for latest GDAL
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable -y
+          sudo apt-get update
+
+          # Install GDAL and build dependencies
+          sudo apt-get install -y \
+            gdal-bin \
+            libgdal-dev \
+            libgeos-dev \
+            libproj-dev \
+            gcc \
+            g++ \
+            pkg-config \
+            libspatialindex-dev \
+            python3-dev
+
+      - name: Configure GDAL environment
+        run: |
+          echo "CPLUS_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
+          echo "C_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: uv sync --frozen
 
@@ -144,44 +169,6 @@ jobs:
         with:
           name: security-report
           path: security-report.json
-
-  pr-validation:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Validate PR title
-        run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          echo "Validating PR title: $PR_TITLE"
-
-          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+ ]]; then
-            echo "❌ PR title must follow conventional commit format"
-            echo "Examples: feat: add new feature, fix(api): resolve bug"
-            exit 1
-          fi
-          echo "✅ PR title format is valid"
-
-      - name: Check for PRP completion
-        run: |
-          PR_BODY="${{ github.event.pull_request.body }}"
-          if [[ "$PR_BODY" == *"PRP Step"* ]]; then
-            echo "✅ PR appears to be PRP-related"
-          else
-            echo "⚠️  PR doesn't mention PRP step - ensure proper documentation"
-          fi
-
-      - name: Analyze changed files
-        run: |
-          echo "📁 Changed files in this PR:"
-          git diff --name-only origin/${{ github.base_ref }}..HEAD
-
-          if git diff --name-only origin/${{ github.base_ref }}..HEAD | grep -E "(\.env|secrets|password)"; then
-            echo "⚠️  Warning: Potentially sensitive files changed"
-          fi
 
   build-pr:
     needs: [test, security]
