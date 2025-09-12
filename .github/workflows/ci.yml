@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-# Cancel in-progress workflows on new pushes to same branch
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -17,15 +16,13 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    # Uncomment if GOOGLE_API_KEY is in an environment instead of repository
-    # environment: development
     strategy:
-      fail-fast: false # Don't cancel other matrix jobs on failure
+      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
         include:
           - python-version: "3.12"
-            coverage: true # Only run coverage on one version
+            coverage: true
 
     steps:
       - uses: actions/checkout@v4
@@ -38,44 +35,35 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
-      # Enhanced GDAL installation with debugging
-      - name: Cache APT packages
-        uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: gdal-bin libgdal-dev libgeos-dev libproj-dev gcc g++ pkg-config libspatialindex-dev python3-dev
-          version: 2.0
-
-      - name: Configure GDAL environment (enhanced)
+      - name: Install GDAL (latest version matching your Homebrew setup)
         run: |
-          echo "🔍 Diagnosing GDAL installation..."
+          # Add ubuntugis repository for latest GDAL
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable -y
+          sudo apt-get update
+          
+          # Install GDAL and build dependencies
+          sudo apt-get install -y \
+            gdal-bin \
+            libgdal-dev \
+            libgeos-dev \
+            libproj-dev \
+            gcc \
+            g++ \
+            pkg-config \
+            libspatialindex-dev \
+            python3-dev
 
-          # Check GDAL installation
-          which gdal-config || echo "❌ gdal-config not found"
-          gdal-config --version || echo "❌ GDAL version check failed"
+      - name: Configure GDAL environment
+        run: |
+          # Get GDAL version and set environment
+          GDAL_VERSION=$(gdal-config --version)
+          echo "✅ GDAL Version: $GDAL_VERSION"
+          echo "GDAL_VERSION=$GDAL_VERSION" >> $GITHUB_ENV
+          echo "CPLUS_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
+          echo "C_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
 
-          # Set environment variables
-          if command -v gdal-config &> /dev/null; then
-            export GDAL_VERSION=$(gdal-config --version)
-            export GDAL_CFLAGS=$(gdal-config --cflags)
-            export GDAL_LIBS=$(gdal-config --libs)
-            
-            echo "✅ GDAL Version: $GDAL_VERSION"
-            echo "GDAL_VERSION=$GDAL_VERSION" >> $GITHUB_ENV
-            echo "CPLUS_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
-            echo "C_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
-            echo "GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
-            echo "GDAL_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
-          else
-            echo "❌ GDAL configuration failed"
-            exit 1
-          fi
-
-          # Check for required files
-          echo "📁 Checking GDAL files..."
-          ls -la /usr/include/gdal/ | head -5 || echo "❌ GDAL headers not found"
-          ls -la /usr/lib/x86_64-linux-gnu/libgdal* || echo "❌ GDAL libraries not found"
-
-      # Cache UV dependencies for faster builds
       - name: Cache UV dependencies
         uses: actions/cache@v4
         with:
@@ -85,27 +73,10 @@ jobs:
             uv-${{ runner.os }}-${{ matrix.python-version }}-
             uv-${{ runner.os }}-
 
-      - name: Install dependencies with GDAL support
+      - name: Install Python dependencies
         run: |
-          echo "📦 Installing Python dependencies with UV..."
-
-          # Set environment variable to allow GDAL installation without numpy initially
-          export GDAL_PYTHON_BINDINGS_WITHOUT_NUMPY=1
-          
-          # Install all dependencies including GDAL (numpy will be installed first)
-          echo "🔧 Installing all dependencies with GDAL fallback..."
-          uv sync --all-extras --frozen || {
-            echo "⚠️ Standard sync failed, trying alternative approach..."
-            
-            # Alternative: Install numpy first, then everything else
-            echo "🔧 Installing numpy first..."
-            uv add numpy
-            
-            # Then install the rest
-            echo "� Installing remaining dependencies..."
-            unset GDAL_PYTHON_BINDINGS_WITHOUT_NUMPY
-            uv sync --all-extras --frozen
-          }
+          echo "📦 Installing dependencies with GDAL $GDAL_VERSION..."
+          uv sync --all-extras --frozen
 
       - name: Verify installation
         run: |
@@ -131,7 +102,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || 'mock-key-for-testing' }}
 
       - name: Run integration tests (non-blocking)
-        continue-on-error: true # Integration tests may fail due to external services
+        continue-on-error: true
         run: uv run pytest tests/test_connectors/ tests/test_services/ -v --maxfail=3
         env:
           INTEGRATION_TESTS: true
@@ -159,19 +130,13 @@ jobs:
       - name: Set up Python
         run: uv python install 3.11
 
-      - name: Cache UV dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/uv
-          key: uv-security-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
-
       - name: Install dependencies
         run: uv sync --frozen
 
       - name: Run security audit
         run: |
           uv run pip-audit --desc --format=json --output=security-report.json
-          uv run pip-audit --desc  # Human readable output
+          uv run pip-audit --desc
 
       - name: Upload security report
         if: always()
@@ -180,21 +145,19 @@ jobs:
           name: security-report
           path: security-report.json
 
-  # PR-specific validation job
   pr-validation:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Full history for better analysis
+          fetch-depth: 0
 
       - name: Validate PR title
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
           echo "Validating PR title: $PR_TITLE"
 
-          # Check conventional commit format
           if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+ ]]; then
             echo "❌ PR title must follow conventional commit format"
             echo "Examples: feat: add new feature, fix(api): resolve bug"
@@ -204,7 +167,6 @@ jobs:
 
       - name: Check for PRP completion
         run: |
-          # Check if PR description mentions PRP step completion
           PR_BODY="${{ github.event.pull_request.body }}"
           if [[ "$PR_BODY" == *"PRP Step"* ]]; then
             echo "✅ PR appears to be PRP-related"
@@ -217,12 +179,10 @@ jobs:
           echo "📁 Changed files in this PR:"
           git diff --name-only origin/${{ github.base_ref }}..HEAD
 
-          # Check for sensitive files
           if git diff --name-only origin/${{ github.base_ref }}..HEAD | grep -E "(\.env|secrets|password)"; then
             echo "⚠️  Warning: Potentially sensitive files changed"
           fi
 
-  # Build validation for PRs (no push)
   build-pr:
     needs: [test, security]
     runs-on: ubuntu-latest
@@ -243,27 +203,21 @@ jobs:
             type=ref,event=pr
 
       - name: Test Docker build (no push)
-        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64 # Single platform for faster PR builds
-          push: false # Only build, don't push to registry
+          platforms: linux/amd64
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # Add build args for optimization
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1
 
       - name: Validate Docker image
         run: |
           echo "✅ Docker build completed successfully for PR #${{ github.event.number }}"
           echo "📦 Image would be tagged as: ${{ steps.meta.outputs.tags }}"
-          echo "🔍 Build completed without pushing to registry"
 
-  # Production build and push (main branch only)
   build:
     needs: [test, security]
     runs-on: ubuntu-latest
@@ -301,15 +255,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64 # Multi-platform support
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # Add build args for optimization
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1
 
   deploy:
     needs: build
@@ -324,12 +275,10 @@ jobs:
           echo "📦 Image: ${{ needs.build.outputs.image-tags }}"
           echo "🔍 Digest: ${{ needs.build.outputs.image-digest }}"
 
-          # Placeholder for actual deployment
           echo "🔄 Would deploy using:"
           echo "   - Docker Compose"
           echo "   - Kubernetes"
           echo "   - Cloud Run"
-          echo "   - or other deployment method"
 
       - name: Create deployment status
         uses: actions/github-script@v7
