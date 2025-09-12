@@ -361,20 +361,29 @@ class TestOverpassConnector:
         mock_response = Mock()
         mock_response.json.side_effect = json.JSONDecodeError("Invalid JSON", "", 0)
 
-        with patch.object(connector, "_make_request", return_value=mock_response), pytest.raises(ValueError, match="Invalid JSON"):
+        with (
+            patch.object(connector, "_make_request", return_value=mock_response),
+            pytest.raises(ValueError, match="Invalid JSON"),
+        ):
             await connector.fetch_transport_stops(sample_district_boundary)
 
     @pytest.mark.asyncio
     async def test_fetch_transport_stops_http_errors(self, connector, sample_district_boundary):
         """Test handling of various HTTP errors."""
         # Test rate limit error
-        with patch.object(connector, "_make_request", side_effect=RateLimitError("Rate limited")), pytest.raises(RateLimitError):
+        with (
+            patch.object(connector, "_make_request", side_effect=RateLimitError("Rate limited")),
+            pytest.raises(RateLimitError),
+        ):
             await connector.fetch_transport_stops(sample_district_boundary)
 
         # Test service unavailable error
-        with patch.object(
-            connector, "_make_request", side_effect=ServiceUnavailableError("Service down")
-        ), pytest.raises(ServiceUnavailableError):
+        with (
+            patch.object(
+                connector, "_make_request", side_effect=ServiceUnavailableError("Service down")
+            ),
+            pytest.raises(ServiceUnavailableError),
+        ):
             await connector.fetch_transport_stops(sample_district_boundary)
 
     @pytest.mark.asyncio
