@@ -4,6 +4,87 @@ All notable changes to the urbanIQ Berlin geodata aggregation system will be doc
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Date: 2025-09-12] - Berlin Geoportal WFS Connector Implementation
+
+### Context
+
+- Implemented comprehensive Berlin Geoportal WFS connectors for automated district boundaries and buildings data acquisition
+- Created production-ready HTTP client infrastructure with exponential backoff retry logic and comprehensive error handling
+- Established spatial filtering capabilities using BBOX parameters and precise geometric clipping for efficient data retrieval
+- Integrated full GeoPandas workflow with CRS transformation handling (EPSG:25833) and validation
+- Followed PRP-driven development approach with systematic implementation planning and validation
+- Verified actual Berlin WFS endpoints and corrected API parameter specifications (WFS 2.0 TYPENAMES vs TYPENAME)
+
+### Changes Made
+
+#### Added
+
+- `app/connectors/base.py` - Abstract base connector class (~203 lines) with common HTTP client functionality
+  - `BaseConnector` abstract class with retry logic using tenacity exponential backoff (3 attempts, 2-10s wait)
+  - Custom exception hierarchy: `ConnectorError`, `ServiceUnavailableError`, `InvalidParameterError`, `RateLimitError`
+  - HTTP client with proper timeout handling, error categorization, and logging integration
+  - JSON and text response parsing with comprehensive error handling
+  - Abstract `test_connection()` method for service health checks
+- `app/connectors/geoportal.py` - Berlin Geoportal WFS connectors (~318 lines)
+  - `DistrictBoundariesConnector` class for fetching specific Berlin district boundaries
+    - Layer: `alkis_bezirke:bezirksgrenzen` with CQL_FILTER on `namgem` field
+    - Methods: `fetch_district_boundary()`, `fetch_all_districts()`, `test_connection()`
+  - `BuildingsConnector` class for efficient buildings data retrieval with spatial filtering
+    - Layer: `alkis_gebaeude:gebaeude` with BBOX spatial filtering and geometric clipping
+    - Methods: `fetch_buildings()`, `fetch_buildings_sample()`, `_create_bbox_filter()`
+    - Smart spatial filtering: BBOX pre-filtering + precise `gpd.clip()` for optimal performance
+  - Full CRS handling with automatic transformation to EPSG:25833 (Berlin standard)
+  - Proper empty result handling with valid GeoDataFrame returns
+- `tests/test_connectors/test_geoportal.py` - Comprehensive test suite (~478 lines) with 29 test cases
+  - Unit tests for BaseConnector abstract class with HTTP client mocking
+  - DistrictBoundariesConnector tests covering successful fetching, error scenarios, and CRS validation
+  - BuildingsConnector tests including spatial filtering, BBOX generation, and empty result handling
+  - Integration tests marked with `@pytest.mark.external` for optional real WFS endpoint testing
+  - Error scenario testing with various HTTP status codes (400, 429, 5xx) and network failures
+  - GeoDataFrame validation tests ensuring proper CRS handling and geometry validation
+- `PRP/berlin-geoportal-wfs-connector-2025-09-12.md` - Project Requirements and Planning document
+  - Complete implementation specifications with 10 measurable success criteria
+  - Technical architecture details for WFS 2.0 integration and spatial filtering
+  - Manual testing procedures and validation strategies
+  - Anti-patterns documentation and performance considerations
+
+#### Modified
+
+- `app/connectors/__init__.py` - Added connector module exports for all classes and exceptions
+- `pyproject.toml` - Added `tenacity>=9.1.2` dependency for exponential backoff retry logic
+
+#### Fixed
+
+- WFS 2.0 parameter specification: Changed `TYPENAME` to `TYPENAMES` for proper Berlin Geoportal WFS compatibility
+- Berlin district field mapping: Corrected from `bezname` to `namgem` based on actual WFS response structure
+- Code formatting and import cleanup: Removed unused imports and fixed formatting with ruff
+- Integration test fixes: Proper handling of real WFS endpoint responses and error scenarios
+- CRS transformation edge cases: Robust handling of different input coordinate systems
+
+### Technical Details
+
+- **WFS Integration**: Berlin Geoportal WFS 2.0 with proper parameter handling and layer name verification
+- **Spatial Filtering Architecture**: Two-stage filtering with BBOX pre-filtering (server-side) + geometric clipping (client-side) for optimal performance
+- **Retry Strategy**: Tenacity-based exponential backoff (3 attempts, 2-10s wait) for HTTP timeouts and 5xx errors
+- **Error Handling**: Comprehensive exception hierarchy with specific error types for different HTTP status codes
+- **CRS Management**: Automatic transformation to EPSG:25833 (Berlin standard) with proper validation
+- **Performance Optimization**: Smart spatial filtering downloads only relevant buildings per district (~5K-15K features) instead of entire Berlin (~1M+ features)
+- **Testing Strategy**: Hybrid approach with mocked unit tests for deterministic behavior and optional external tests for real API validation
+- **Code Quality**: Follows CLAUDE.md guidelines with <500 lines per file, comprehensive type hints, and proper async patterns
+- **GeoPandas Integration**: Full workflow support with proper geometry validation and CRS handling
+
+### Next Steps
+
+- Integrate WFS connectors into Data Service for orchestrated geodata acquisition
+- Implement connector caching layer for repeated district boundary requests
+- Add OpenStreetMap Overpass API connector for public transport stops (oepnv_haltestellen)
+- Create Processing Service integration for spatial data harmonization workflows
+- Implement connector monitoring and performance metrics collection
+- Add support for additional Berlin Geoportal datasets (vegetation, infrastructure, etc.)
+- Optimize large dataset handling with streaming and pagination support
+
+---
+
 ## [Date: 2025-09-12] - NLP Service - Gemini Integration Implementation
 
 ### Context
