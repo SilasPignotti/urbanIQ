@@ -4,6 +4,74 @@ All notable changes to the urbanIQ Berlin geodata aggregation system will be doc
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Date: 2025-01-16] - OpenStreetMap Overpass API Connector Implementation
+
+### Context
+
+- Implemented comprehensive OpenStreetMap Overpass API connector for public transport stops (ÖPNV-Haltestellen) acquisition
+- Created PRP-driven development approach with systematic planning, implementation, and validation phases
+- Established rate-limited HTTP client specifically designed for Overpass API constraints (2 requests/second)
+- Integrated Overpass QL query templates with bbox-based spatial filtering for efficient transport stop retrieval
+- Built complete CRS transformation pipeline from WGS84 to EPSG:25833 for Berlin geodata standardization
+- Followed established BaseConnector patterns while addressing unique OpenStreetMap data processing requirements
+- Developed comprehensive test suite with both mocked unit tests and optional real API integration tests
+
+### Changes Made
+
+#### Added
+
+- `PRP/openstreetmap-overpass-connector-2025-09-12.md` - Project Requirements and Planning document (~200 lines)
+  - Complete implementation specifications with 12 measurable success criteria
+  - Technical architecture details for Overpass QL integration and rate limiting
+  - OSM tag processing strategies and CRS transformation requirements
+  - Anti-patterns documentation and performance considerations specific to Overpass API
+- `app/connectors/osm.py` - Complete OpenStreetMap Overpass connector implementation (~316 lines)
+  - `OverpassRateLimiter` class with thread-safe asyncio-based rate limiting (2 req/sec)
+  - `OverpassConnector` class inheriting from BaseConnector with full Overpass API integration
+    - Methods: `fetch_transport_stops()`, `test_connection()`, `_create_bbox_filter()`, `_process_overpass_response()`
+    - Overpass QL query template system with configurable bbox and timeout parameters
+    - Support for multiple transport stop types: public_transport, highway=bus_stop, railway=tram_stop, railway=station, amenity=ferry_terminal
+    - OSM tag processing with intelligent transport mode detection and attribute mapping
+    - JSON response parsing with comprehensive validation and error handling
+  - Full CRS transformation workflow from WGS84 (EPSG:4326) to EPSG:25833
+  - Spatial filtering with precise district boundary clipping using GeoPandas
+- `tests/test_connectors/test_osm.py` - Comprehensive test suite (~522 lines) with 23 test cases
+  - `TestOverpassRateLimiter` class with timing-based rate limiting validation
+  - `TestOverpassConnector` class covering all functionality with mocked HTTP responses
+  - Unit tests for bbox creation, coordinate transformation, OSM tag processing, and JSON response parsing
+  - Error handling tests for invalid coordinates, malformed JSON, HTTP errors, and empty responses
+  - `TestOverpassConnectorIntegration` class with optional real API tests marked `@pytest.mark.external`
+  - GeoDataFrame validation tests ensuring proper CRS handling and geometry creation
+
+#### Modified
+
+- `app/connectors/__init__.py` - Added OverpassConnector export for Data Service integration
+  - Added import: `from .osm import OverpassConnector`
+  - Added to `__all__` list: `"OverpassConnector"`
+
+### Technical Details
+
+- **Rate Limiting Architecture**: Thread-safe implementation using asyncio.Lock and datetime-based timing control
+- **Overpass QL Integration**: Template-based query system with bbox parameter substitution and configurable timeouts (25s default)
+- **OSM Data Processing**: Comprehensive tag extraction and mapping with transport mode detection prioritization
+- **CRS Transformation Pipeline**: Robust coordinate system handling from WGS84 input to EPSG:25833 output
+- **Spatial Filtering Strategy**: Two-stage filtering with Overpass bbox pre-filtering + GeoPandas clipping for precision
+- **Error Handling**: Complete integration with BaseConnector error hierarchy (ConnectorError, ServiceUnavailableError, etc.)
+- **Testing Strategy**: Hybrid approach with deterministic mocked tests and optional external API validation
+- **Code Quality**: Follows CLAUDE.md guidelines with proper async patterns, comprehensive type hints, and <500 lines per file
+
+### Next Steps
+
+- Integrate OverpassConnector into Data Service for orchestrated geodata acquisition workflows
+- Implement connector caching layer for repeated transport stop requests to optimize API usage
+- Add support for additional OpenStreetMap transport infrastructure (subway entrances, bike sharing stations)
+- Create Processing Service integration for transport stop data harmonization with other Berlin datasets
+- Implement connector monitoring and performance metrics collection for rate limiting optimization
+- Add support for advanced Overpass QL features (areas, relations) for complex spatial queries
+- Optimize large dataset handling with streaming processing for city-wide transport network analysis
+
+---
+
 ## [Date: 2025-09-12] - Berlin Geoportal WFS Connector Implementation
 
 ### Context

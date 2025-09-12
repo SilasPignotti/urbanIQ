@@ -8,6 +8,7 @@ from .base import (
     ServiceUnavailableError,
 )
 from .geoportal import BuildingsConnector, DistrictBoundariesConnector
+from .osm import OverpassConnector
 
 __all__ = [
     "BaseConnector",
@@ -17,4 +18,5 @@ __all__ = [
     "ServiceUnavailableError",
     "DistrictBoundariesConnector",
     "BuildingsConnector",
+    "OverpassConnector",
 ]
