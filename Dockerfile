@@ -1,13 +1,25 @@
 FROM python:3.11-slim as base
 
-# System dependencies for GeoPandas
+# System dependencies for GeoPandas with latest GDAL
 RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && add-apt-repository ppa:ubuntugis/ubuntugis-unstable -y \
+    && apt-get update \
+    && apt-get install -y \
     gdal-bin \
     libgdal-dev \
+    libgeos-dev \
+    libproj-dev \
     gcc \
     g++ \
+    pkg-config \
+    libspatialindex-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Set GDAL environment variables
+ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
+ENV C_INCLUDE_PATH=/usr/include/gdal
 
 WORKDIR /app
 
