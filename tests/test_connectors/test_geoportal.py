@@ -210,7 +210,10 @@ class TestDistrictBoundariesConnector:
         mock_geojson = {"type": "FeatureCollection", "features": []}
         mock_response_text = json.dumps(mock_geojson)
 
-        with patch.object(connector, "_get_text", return_value=mock_response_text), pytest.raises(ValueError, match="District 'NonExistent' not found"):
+        with (
+            patch.object(connector, "_get_text", return_value=mock_response_text),
+            pytest.raises(ValueError, match="District 'NonExistent' not found"),
+        ):
             await connector.fetch_district_boundary("NonExistent")
 
     @pytest.mark.asyncio
@@ -484,7 +487,10 @@ class TestErrorScenarios:
         """Test handling of connection errors."""
         connector = DistrictBoundariesConnector()
 
-        with patch.object(connector, "_get_text", side_effect=ConnectorError("Connection failed")), pytest.raises(ConnectorError):
+        with (
+            patch.object(connector, "_get_text", side_effect=ConnectorError("Connection failed")),
+            pytest.raises(ConnectorError),
+        ):
             await connector.fetch_district_boundary("Pankow")
 
     def test_crs_handling_with_different_input_crs(self):
