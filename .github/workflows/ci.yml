@@ -142,7 +142,7 @@ jobs:
           echo "uvicorn" >> temp-requirements.txt
           echo "pydantic" >> temp-requirements.txt
           echo "sqlmodel" >> temp-requirements.txt
-          uv pip audit --requirement temp-requirements.txt
+          uv run pip-audit --requirement temp-requirements.txt
 
       - name: Upload security report (optional)
         if: always()
