@@ -6,6 +6,7 @@ confidence scoring, and error handling with Google API mocking.
 """
 
 import json
+import os
 from unittest.mock import Mock, patch
 
 import pytest
@@ -397,7 +398,10 @@ class TestNLPServiceRealAPI:
     Skip with: pytest -m "not external"
     """
 
-    @pytest.mark.skipif(not settings.google_api_key, reason="No Google API key configured")
+    @pytest.mark.skipif(
+        not settings.google_api_key or os.getenv("CI") == "true",
+        reason="No Google API key configured or running in CI",
+    )
     def test_real_api_german_parsing(self):
         """Test real API parsing with German geodata requests."""
         service = NLPService()
@@ -433,7 +437,10 @@ class TestNLPServiceRealAPI:
             )
             assert result.is_confident, f"Not confident for: {case['input']}"
 
-    @pytest.mark.skipif(not settings.google_api_key, reason="No Google API key configured")
+    @pytest.mark.skipif(
+        not settings.google_api_key or os.getenv("CI") == "true",
+        reason="No Google API key configured or running in CI",
+    )
     def test_real_api_low_confidence_handling(self):
         """Test real API handling of unclear requests."""
         service = NLPService()
