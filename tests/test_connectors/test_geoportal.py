@@ -6,14 +6,12 @@ spatial filtering, and CRS transformations with mocked and integration tests.
 """
 
 import json
-from io import StringIO
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import geopandas as gpd
 import httpx
-import pandas as pd
 import pytest
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Polygon
 
 from app.connectors.base import (
     BaseConnector,
@@ -59,9 +57,9 @@ class TestBaseConnector:
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_client.return_value.__aenter__.return_value.request.return_value = mock_response
-            
+
             response = await connector._make_request("GET", "https://example.com/test")
-            
+
             assert response.status_code == 200
             mock_response.raise_for_status.assert_called_once()
 
@@ -74,7 +72,7 @@ class TestBaseConnector:
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_client.return_value.__aenter__.return_value.request.return_value = mock_response
-            
+
             with pytest.raises(InvalidParameterError, match="Invalid parameters"):
                 await connector._make_request("GET", "https://example.com/test")
 
@@ -86,7 +84,7 @@ class TestBaseConnector:
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_client.return_value.__aenter__.return_value.request.return_value = mock_response
-            
+
             with pytest.raises(RateLimitError, match="Rate limit exceeded"):
                 await connector._make_request("GET", "https://example.com/test")
 
@@ -98,7 +96,7 @@ class TestBaseConnector:
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_client.return_value.__aenter__.return_value.request.return_value = mock_response
-            
+
             with pytest.raises(ServiceUnavailableError, match="Service unavailable"):
                 await connector._make_request("GET", "https://example.com/test")
 
@@ -106,8 +104,10 @@ class TestBaseConnector:
     async def test_make_request_timeout_error(self, connector):
         """Test timeout error handling."""
         with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.request.side_effect = httpx.TimeoutException("Timeout")
-            
+            mock_client.return_value.__aenter__.return_value.request.side_effect = (
+                httpx.TimeoutException("Timeout")
+            )
+
             with pytest.raises(ServiceUnavailableError, match="Request timeout"):
                 await connector._make_request("GET", "https://example.com/test")
 
@@ -121,9 +121,9 @@ class TestBaseConnector:
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_client.return_value.__aenter__.return_value.request.return_value = mock_response
-            
+
             result = await connector._get_json("https://example.com/api")
-            
+
             assert result == {"key": "value"}
 
     @pytest.mark.asyncio
@@ -136,7 +136,7 @@ class TestBaseConnector:
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_client.return_value.__aenter__.return_value.request.return_value = mock_response
-            
+
             with pytest.raises(ConnectorError, match="Failed to parse JSON"):
                 await connector._get_json("https://example.com/api")
 
@@ -184,23 +184,20 @@ class TestDistrictBoundariesConnector:
                     "type": "Feature",
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [[
-                            [13.3, 52.5], [13.4, 52.5], [13.4, 52.6], [13.3, 52.6], [13.3, 52.5]
-                        ]]
+                        "coordinates": [
+                            [[13.3, 52.5], [13.4, 52.5], [13.4, 52.6], [13.3, 52.6], [13.3, 52.5]]
+                        ],
                     },
-                    "properties": {
-                        "bezname": "Pankow",
-                        "schluessel": "03"
-                    }
+                    "properties": {"bezname": "Pankow", "schluessel": "03"},
                 }
-            ]
+            ],
         }
 
         mock_response_text = json.dumps(mock_geojson)
 
         with patch.object(connector, "_get_text", return_value=mock_response_text):
             result = await connector.fetch_district_boundary("Pankow")
-            
+
             assert isinstance(result, gpd.GeoDataFrame)
             assert len(result) == 1
             assert result.crs.to_string() == "EPSG:25833"
@@ -213,9 +210,8 @@ class TestDistrictBoundariesConnector:
         mock_geojson = {"type": "FeatureCollection", "features": []}
         mock_response_text = json.dumps(mock_geojson)
 
-        with patch.object(connector, "_get_text", return_value=mock_response_text):
-            with pytest.raises(ValueError, match="District 'NonExistent' not found"):
-                await connector.fetch_district_boundary("NonExistent")
+        with patch.object(connector, "_get_text", return_value=mock_response_text), pytest.raises(ValueError, match="District 'NonExistent' not found"):
+            await connector.fetch_district_boundary("NonExistent")
 
     @pytest.mark.asyncio
     async def test_fetch_all_districts_success(self, connector):
@@ -228,30 +224,30 @@ class TestDistrictBoundariesConnector:
                     "type": "Feature",
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [[
-                            [13.3, 52.5], [13.4, 52.5], [13.4, 52.6], [13.3, 52.6], [13.3, 52.5]
-                        ]]
+                        "coordinates": [
+                            [[13.3, 52.5], [13.4, 52.5], [13.4, 52.6], [13.3, 52.6], [13.3, 52.5]]
+                        ],
                     },
-                    "properties": {"bezname": "Pankow", "schluessel": "03"}
+                    "properties": {"bezname": "Pankow", "schluessel": "03"},
                 },
                 {
                     "type": "Feature",
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [[
-                            [13.2, 52.4], [13.3, 52.4], [13.3, 52.5], [13.2, 52.5], [13.2, 52.4]
-                        ]]
+                        "coordinates": [
+                            [[13.2, 52.4], [13.3, 52.4], [13.3, 52.5], [13.2, 52.5], [13.2, 52.4]]
+                        ],
                     },
-                    "properties": {"bezname": "Mitte", "schluessel": "01"}
-                }
-            ]
+                    "properties": {"bezname": "Mitte", "schluessel": "01"},
+                },
+            ],
         }
 
         mock_response_text = json.dumps(mock_geojson)
 
         with patch.object(connector, "_get_text", return_value=mock_response_text):
             result = await connector.fetch_all_districts()
-            
+
             assert isinstance(result, gpd.GeoDataFrame)
             assert len(result) == 2
             assert result.crs.to_string() == "EPSG:25833"
@@ -269,12 +265,10 @@ class TestBuildingsConnector:
     @pytest.fixture
     def sample_district_gdf(self):
         """Create sample district boundary GeoDataFrame."""
-        polygon = Polygon([(400000, 5800000), (401000, 5800000), (401000, 5801000), (400000, 5801000)])
-        gdf = gpd.GeoDataFrame(
-            {"bezname": ["Test District"]},
-            geometry=[polygon],
-            crs="EPSG:25833"
+        polygon = Polygon(
+            [(400000, 5800000), (401000, 5800000), (401000, 5801000), (400000, 5801000)]
         )
+        gdf = gpd.GeoDataFrame({"bezname": ["Test District"]}, geometry=[polygon], crs="EPSG:25833")
         return gdf
 
     def test_connector_initialization(self, connector):
@@ -297,12 +291,12 @@ class TestBuildingsConnector:
     def test_create_bbox_filter(self, connector, sample_district_gdf):
         """Test BBOX filter string creation."""
         bbox_str = connector._create_bbox_filter(sample_district_gdf)
-        
+
         # Check format: minx,miny,maxx,maxy,EPSG:25833
         parts = bbox_str.split(",")
         assert len(parts) == 5
         assert parts[4] == "EPSG:25833"
-        
+
         # Check that bounds include buffer
         minx, miny, maxx, maxy = map(float, parts[:4])
         assert minx < 400000  # Should have buffer
@@ -319,38 +313,42 @@ class TestBuildingsConnector:
                     "type": "Feature",
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [[
-                            [400100, 5800100], [400200, 5800100], [400200, 5800200], [400100, 5800200], [400100, 5800100]
-                        ]]
+                        "coordinates": [
+                            [
+                                [400100, 5800100],
+                                [400200, 5800100],
+                                [400200, 5800200],
+                                [400100, 5800200],
+                                [400100, 5800100],
+                            ]
+                        ],
                     },
-                    "properties": {
-                        "nutzung": "Wohngebäude",
-                        "geschosse": 3,
-                        "baujahr": 1995
-                    }
+                    "properties": {"nutzung": "Wohngebäude", "geschosse": 3, "baujahr": 1995},
                 },
                 {
                     "type": "Feature",
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [[
-                            [400300, 5800300], [400400, 5800300], [400400, 5800400], [400300, 5800400], [400300, 5800300]
-                        ]]
+                        "coordinates": [
+                            [
+                                [400300, 5800300],
+                                [400400, 5800300],
+                                [400400, 5800400],
+                                [400300, 5800400],
+                                [400300, 5800300],
+                            ]
+                        ],
                     },
-                    "properties": {
-                        "nutzung": "Bürogebäude",
-                        "geschosse": 5,
-                        "baujahr": 2000
-                    }
-                }
-            ]
+                    "properties": {"nutzung": "Bürogebäude", "geschosse": 5, "baujahr": 2000},
+                },
+            ],
         }
 
         mock_response_text = json.dumps(mock_geojson)
 
         with patch.object(connector, "_get_text", return_value=mock_response_text):
             result = await connector.fetch_buildings(sample_district_gdf)
-            
+
             assert isinstance(result, gpd.GeoDataFrame)
             assert len(result) <= 2  # May be less due to clipping
             assert result.crs.to_string() == "EPSG:25833"
@@ -365,7 +363,7 @@ class TestBuildingsConnector:
 
         with patch.object(connector, "_get_text", return_value=mock_response_text):
             result = await connector.fetch_buildings(sample_district_gdf)
-            
+
             assert isinstance(result, gpd.GeoDataFrame)
             assert len(result) == 0
             assert result.crs.to_string() == "EPSG:25833"
@@ -374,7 +372,7 @@ class TestBuildingsConnector:
     async def test_fetch_buildings_empty_district(self, connector):
         """Test buildings fetching with empty district boundary."""
         empty_gdf = gpd.GeoDataFrame(geometry=[], crs="EPSG:25833")
-        
+
         with pytest.raises(ValueError, match="District boundary GeoDataFrame is empty"):
             await connector.fetch_buildings(empty_gdf)
 
@@ -388,20 +386,26 @@ class TestBuildingsConnector:
                     "type": "Feature",
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [[
-                            [400100, 5800100], [400200, 5800100], [400200, 5800200], [400100, 5800200], [400100, 5800100]
-                        ]]
+                        "coordinates": [
+                            [
+                                [400100, 5800100],
+                                [400200, 5800100],
+                                [400200, 5800200],
+                                [400100, 5800200],
+                                [400100, 5800100],
+                            ]
+                        ],
                     },
-                    "properties": {"nutzung": "Wohngebäude"}
+                    "properties": {"nutzung": "Wohngebäude"},
                 }
-            ]
+            ],
         }
 
         mock_response_text = json.dumps(mock_geojson)
 
         with patch.object(connector, "_get_text", return_value=mock_response_text):
             result = await connector.fetch_buildings_sample(sample_district_gdf, max_features=100)
-            
+
             assert isinstance(result, gpd.GeoDataFrame)
             assert len(result) <= 100
             assert result.crs.to_string() == "EPSG:25833"
@@ -415,7 +419,7 @@ class TestGeoportalIntegration:
     async def test_real_district_boundaries_connection(self):
         """Test real connection to district boundaries WFS service."""
         connector = DistrictBoundariesConnector()
-        
+
         result = await connector.test_connection()
         assert result is True
 
@@ -424,7 +428,7 @@ class TestGeoportalIntegration:
     async def test_real_buildings_connection(self):
         """Test real connection to buildings WFS service."""
         connector = BuildingsConnector()
-        
+
         result = await connector.test_connection()
         assert result is True
 
@@ -433,10 +437,10 @@ class TestGeoportalIntegration:
     async def test_real_fetch_small_district(self):
         """Test fetching a small district boundary (integration test)."""
         connector = DistrictBoundariesConnector()
-        
+
         # Use a small district like Tempelhof-Schöneberg
         result = await connector.fetch_district_boundary("Tempelhof-Schöneberg")
-        
+
         assert isinstance(result, gpd.GeoDataFrame)
         assert len(result) >= 1
         assert result.crs.to_string() == "EPSG:25833"
@@ -449,13 +453,13 @@ class TestGeoportalIntegration:
         """Test fetching buildings sample from real service."""
         district_connector = DistrictBoundariesConnector()
         buildings_connector = BuildingsConnector()
-        
+
         # Get small district boundary first
         district = await district_connector.fetch_district_boundary("Tempelhof-Schöneberg")
-        
+
         # Fetch small sample of buildings
         result = await buildings_connector.fetch_buildings_sample(district, max_features=10)
-        
+
         assert isinstance(result, gpd.GeoDataFrame)
         assert len(result) <= 10
         if len(result) > 0:
@@ -471,7 +475,7 @@ class TestErrorScenarios:
         """Test connector behavior with invalid base URL."""
         connector = DistrictBoundariesConnector()
         connector.base_url = "https://invalid-url-that-does-not-exist.com"
-        
+
         result = await connector.test_connection()
         assert result is False
 
@@ -479,24 +483,21 @@ class TestErrorScenarios:
     async def test_fetch_with_connection_error(self):
         """Test handling of connection errors."""
         connector = DistrictBoundariesConnector()
-        
-        with patch.object(connector, "_get_text", side_effect=ConnectorError("Connection failed")):
-            with pytest.raises(Exception):  # Should propagate the error
-                await connector.fetch_district_boundary("Pankow")
+
+        with patch.object(connector, "_get_text", side_effect=ConnectorError("Connection failed")), pytest.raises(ConnectorError):
+            await connector.fetch_district_boundary("Pankow")
 
     def test_crs_handling_with_different_input_crs(self):
         """Test CRS handling when input GeoDataFrame has different CRS."""
         # Create district boundary in WGS84
         polygon = Polygon([(13.3, 52.5), (13.4, 52.5), (13.4, 52.6), (13.3, 52.6)])
         district_wgs84 = gpd.GeoDataFrame(
-            {"bezname": ["Test"]},
-            geometry=[polygon],
-            crs="EPSG:4326"
+            {"bezname": ["Test"]}, geometry=[polygon], crs="EPSG:4326"
         )
-        
+
         connector = BuildingsConnector()
         bbox_str = connector._create_bbox_filter(district_wgs84)
-        
+
         # Should work regardless of input CRS
         assert "EPSG:25833" in bbox_str
         assert len(bbox_str.split(",")) == 5
