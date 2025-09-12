@@ -259,4 +259,122 @@ After successful commit, provide:
 - Include **test updates** with feature commits
 - Consider **test-driven development** workflow
 
-Ready to create professional, well-structured commits! 🚀
+---
+
+## 📤 Post-Commit Push Decision
+
+After successful commit, determine the appropriate next action:
+
+### **Push Decision Logic**
+
+```bash
+echo ""
+echo "🎯 Commit successful! What's next?"
+echo ""
+echo "📍 Current branch: $(git branch --show-current)"
+echo "📊 Branch status:"
+
+# Check if remote branch exists and compare with local
+CURRENT_BRANCH=$(git branch --show-current)
+REMOTE_EXISTS=$(git ls-remote --heads origin $CURRENT_BRANCH)
+
+if [ -z "$REMOTE_EXISTS" ]; then
+    echo "   🆕 Remote branch doesn't exist yet"
+    COMMITS_AHEAD=0
+    COMMITS_BEHIND=0
+else
+    # Get ahead/behind counts
+    AHEAD_BEHIND=$(git rev-list --left-right --count origin/$CURRENT_BRANCH...$CURRENT_BRANCH 2>/dev/null || echo "0	0")
+    COMMITS_BEHIND=$(echo $AHEAD_BEHIND | cut -f1)
+    COMMITS_AHEAD=$(echo $AHEAD_BEHIND | cut -f2)
+
+    echo "   📈 Commits ahead of remote: $COMMITS_AHEAD"
+    echo "   📉 Commits behind remote: $COMMITS_BEHIND"
+fi
+
+echo ""
+echo "🤔 Choose your next action:"
+echo ""
+echo "1️⃣  Continue local development (no push)"
+echo "2️⃣  Push to remote for backup/collaboration"
+echo "3️⃣  Ready for PR (will use create-pull-request command)"
+echo "4️⃣  Show commit log and decide later"
+echo ""
+
+read -p "👉 Your choice (1-4): " choice
+echo ""
+
+case $choice in
+  1)
+    echo "📝 Continuing with local development..."
+    echo "💡 Remember to push when you reach a milestone or need backup!"
+    ;;
+  2)
+    echo "📤 Pushing to remote branch..."
+    if [ -z "$REMOTE_EXISTS" ]; then
+        echo "🆕 Creating new remote branch..."
+        git push -u origin $CURRENT_BRANCH
+    else
+        git push origin $CURRENT_BRANCH
+    fi
+
+    if [ $? -eq 0 ]; then
+        echo "✅ Successfully pushed to origin/$CURRENT_BRANCH"
+        echo "🔗 View branch: https://github.com/SilasPignotti/urbanIQ/tree/$CURRENT_BRANCH"
+    else
+        echo "❌ Push failed! Check for conflicts or connection issues."
+    fi
+    ;;
+  3)
+    echo "🎯 Ready for Pull Request!"
+    echo ""
+    echo "📋 Next steps:"
+    echo "   1. Run pre-PR validation and create PR using: 'create-pull-request'"
+    echo "   2. The create-pull-request command will handle pushing if needed"
+    echo ""
+    echo "💡 Tip: The PR command will check if remote is up-to-date automatically"
+    ;;
+  4)
+    echo "📊 Recent commit history:"
+    echo ""
+    git log --oneline -10 --graph --decorate
+    echo ""
+    echo "🔄 Run this command again when ready to push or create PR"
+    ;;
+  *)
+    echo "📝 Invalid choice. Continuing with local development..."
+    echo "💡 Run this command again when you want to push or create PR"
+    ;;
+esac
+```
+
+### **Push Strategy Recommendations**
+
+**When to choose each option:**
+
+- **Option 1 (Continue Local)**:
+
+  - Still working on the same feature
+  - Making experimental changes
+  - Want to commit frequently for rollback safety
+
+- **Option 2 (Push for Backup)**:
+
+  - Reached a stable milestone within the PRP
+  - End of work session
+  - Want to collaborate or get early feedback
+  - Switching to different work context
+
+- **Option 3 (Ready for PR)**:
+
+  - PRP step is complete and tested
+  - All acceptance criteria met
+  - Ready for code review
+  - Documentation updated
+
+- **Option 4 (Review & Decide)**:
+  - Want to see recent progress
+  - Unsure about current state
+  - Need to review commit quality
+
+Ready to create professional, well-structured commits with intelligent push decisions! 🚀
