@@ -387,17 +387,67 @@ echo "📝 PR Title: $PR_TITLE"
 echo "📊 Commits in PR: $COMMIT_COUNT"
 echo ""
 
+# Quality checklist for PR content
+echo "✅ PR Quality Checklist:"
+echo "   - Title accurately reflects the changes"
+echo "   - No mention of 'claude', 'AI-generated', or 'created by Claude Code'"
+echo "   - Professional and descriptive content"
+echo "   - Follows project standards"
+echo ""
+
+# Prepare professional PR body
+PR_BODY_FILE=$(mktemp)
+if [ -f ".github/pull_request_template.md" ]; then
+    cp .github/pull_request_template.md "$PR_BODY_FILE"
+else
+    cat > "$PR_BODY_FILE" << 'EOF'
+## Description
+
+Brief description of changes and motivation.
+
+## Changes Made
+
+-
+
+## Testing
+
+- [ ] Tests pass locally with `uv run pytest`
+- [ ] Code follows style guidelines (`uv run ruff check .`)
+- [ ] Type checking passes (`uv run mypy app/`)
+
+## Additional Notes
+
+Professional PR created following project standards.
+EOF
+fi
+
 # Create PR using GitHub CLI
 echo "🚀 Creating Pull Request..."
 gh pr create \
   --title "$PR_TITLE" \
-  --body "$(cat .github/pull_request_template.md 2>/dev/null || echo 'Automated PR creation - please fill in details')" \
+  --body-file "$PR_BODY_FILE" \
   --base main \
   --head $CURRENT_BRANCH \
   --assignee @me
 
+# Clean up temp file
+rm -f "$PR_BODY_FILE"
+
 if [ $? -eq 0 ]; then
     echo "✅ Pull Request created successfully!"
+    echo ""
+
+    # Validate PR content doesn't contain unwanted phrases
+    echo "🔍 Validating PR content..."
+    PR_CONTENT=$(gh pr view $CURRENT_BRANCH --json title,body --jq '.title + " " + .body')
+
+    if echo "$PR_CONTENT" | grep -i "created by claude\|claude code\|ai-generated" > /dev/null; then
+        echo "⚠️  WARNING: PR contains AI-generated content markers!"
+        echo "🔧 Please edit the PR to remove any references to Claude or AI generation:"
+        gh pr edit $CURRENT_BRANCH
+    else
+        echo "✅ PR content validation passed - no AI markers found"
+    fi
     echo ""
 
     # Show PR details
