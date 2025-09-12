@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,23 +6,12 @@ on:
   pull_request:
     branches: [main]
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  UV_VERSION: "0.4.18"
-
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
-        include:
-          - python-version: "3.12"
-            coverage: true
 
     steps:
       - uses: actions/checkout@v4
@@ -30,89 +19,107 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v2
         with:
-          version: ${{ env.UV_VERSION }}
+          version: "0.4.18"
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
-      - name: Install GDAL (latest version matching your Homebrew setup)
+      - name: Install system dependencies for GeoPandas
         run: |
-          # Add ubuntugis repository for latest GDAL
           sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable -y
-          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev gcc g++
 
-          # Install GDAL and build dependencies
-          sudo apt-get install -y \
-            gdal-bin \
-            libgdal-dev \
-            libgeos-dev \
-            libproj-dev \
-            gcc \
-            g++ \
-            pkg-config \
-            libspatialindex-dev \
-            python3-dev
-
-      - name: Configure GDAL environment
-        run: |
-          # Get GDAL version and set environment
-          GDAL_VERSION=$(gdal-config --version)
-          echo "✅ GDAL Version: $GDAL_VERSION"
-          echo "GDAL_VERSION=$GDAL_VERSION" >> $GITHUB_ENV
-          echo "CPLUS_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
-          echo "C_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
-
-      - name: Cache UV dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-${{ matrix.python-version }}-
-            uv-${{ runner.os }}-
-
-      - name: Install Python dependencies
-        run: |
-          echo "📦 Installing dependencies with GDAL $GDAL_VERSION..."
-          uv sync --all-extras --frozen
-
-      - name: Verify installation
-        run: |
-          uv run python -c "import geopandas; print('GeoPandas version:', geopandas.__version__)"
-          uv run python -c "import fastapi; print('FastAPI version:', fastapi.__version__)"
+      - name: Install dependencies
+        run: uv sync --all-extras
 
       - name: Run linting
         run: |
-          uv run ruff check . --output-format=github
+          uv run ruff check .
           uv run ruff format --check .
 
       - name: Run type checking
-        run: uv run mypy app/ --install-types --non-interactive
+        run: uv run mypy app/
 
       - name: Run unit tests
-        run: |
-          if [ "${{ matrix.coverage }}" = "true" ]; then
-            uv run pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing
-          else
-            uv run pytest tests/ -v
-          fi
+        run: uv run pytest tests/ -v --cov=app --cov-report=xml
         env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || 'mock-key-for-testing' }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
-      - name: Run integration tests (non-blocking)
-        continue-on-error: true
-        run: uv run pytest tests/test_connectors/ tests/test_services/ -v --maxfail=3
+      - name: Run integration tests
+        run: uv run pytest tests/test_connectors/ tests/test_services/ -v
         env:
           INTEGRATION_TESTS: true
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || 'mock-key-for-testing' }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
       - name: Upload coverage reports
-        if: matrix.coverage == true
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          version: "0.4.18"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install only pip-audit (skip GDAL dependencies)
+        run: |
+          uv pip install pip-audit
+
+      - name: Run security audit on requirements
+        run: |
+          # Create a simple requirements file without GDAL for faster security scanning
+          echo "fastapi" > temp-requirements.txt
+          echo "uvicorn" >> temp-requirements.txt
+          echo "pydantic" >> temp-requirements.txt
+          echo "sqlmodel" >> temp-requirements.txt
+          uv pip audit --requirement temp-requirements.txt
+
+  build:
+    needs: [test, security]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production..."
+          echo "Image: ghcr.io/${{ github.repository }}:${{ github.sha }}"
+          # Add your deployment script here
