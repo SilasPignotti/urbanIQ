@@ -232,7 +232,9 @@ WICHTIG:
             response = self.llm.invoke(prompt)
 
             # Parse the structured response
-            content = response.content if isinstance(response.content, str) else str(response.content)
+            content = (
+                response.content if isinstance(response.content, str) else str(response.content)
+            )
             parsed_result = self.parser.parse(content)
 
             # Validate confidence threshold
