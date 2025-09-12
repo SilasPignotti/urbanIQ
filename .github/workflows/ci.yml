@@ -158,6 +158,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      - name: Install pip-audit
+        run: uv add --dev pip-audit
+
       - name: Run security audit
         run: |
           uv run pip-audit --desc --format=json --output=security-report.json
