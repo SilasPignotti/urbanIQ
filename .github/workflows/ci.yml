@@ -89,26 +89,23 @@ jobs:
         run: |
           echo "📦 Installing Python dependencies with UV..."
 
-          # Install numpy first via UV (required for GDAL bindings)
-          echo "🔧 Installing numpy first..."
-          uv add numpy
-
-          # Try to install GDAL Python package via UV with constraints
-          echo "🔧 Installing GDAL Python bindings via UV..."
-          if [ -n "$GDAL_VERSION" ]; then
-            echo "Attempting to install GDAL version: $GDAL_VERSION"
-            uv add "gdal==$GDAL_VERSION" --verbose || {
-              echo "⚠️ Exact version failed, trying with broader constraints..."
-              uv add "gdal>=3.4.0,<3.10.0" --verbose
-            }
-          else
-            echo "Using version constraints from pyproject.toml"
-            uv add "gdal>=3.4.0,<3.10.0" --verbose
-          fi
-
-          # Install remaining dependencies using UV sync
-          echo "📦 Installing remaining dependencies..."
-          uv sync --all-extras --frozen
+          # Set environment variable to allow GDAL installation without numpy initially
+          export GDAL_PYTHON_BINDINGS_WITHOUT_NUMPY=1
+          
+          # Install all dependencies including GDAL (numpy will be installed first)
+          echo "🔧 Installing all dependencies with GDAL fallback..."
+          uv sync --all-extras --frozen || {
+            echo "⚠️ Standard sync failed, trying alternative approach..."
+            
+            # Alternative: Install numpy first, then everything else
+            echo "🔧 Installing numpy first..."
+            uv add numpy
+            
+            # Then install the rest
+            echo "� Installing remaining dependencies..."
+            unset GDAL_PYTHON_BINDINGS_WITHOUT_NUMPY
+            uv sync --all-extras --frozen
+          }
 
       - name: Verify installation
         run: |
