@@ -8,8 +8,6 @@ with comprehensive edge case coverage.
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-import pytest
-
 from app.models import Package
 
 
@@ -215,21 +213,21 @@ class TestPackageModel:
         # NOTE: Required field validation still works in SQLModel table mode
         try:
             Package()  # Missing job_id and file_path
-            assert False, "Expected an exception for missing required fields"
+            raise AssertionError("Expected an exception for missing required fields")
         except Exception as e:
             # SQLModel/SQLAlchemy may raise different exception types
             assert True, f"Required field validation works: {type(e).__name__}: {e}"
 
         try:
             Package(job_id="test-job-id")  # Missing file_path
-            assert False, "Expected an exception for missing required fields"
+            raise AssertionError("Expected an exception for missing required fields")
         except Exception as e:
             # SQLModel/SQLAlchemy may raise different exception types
             assert True, f"Required field validation works: {type(e).__name__}: {e}"
 
         try:
             Package(file_path="/tmp/test.zip")  # Missing job_id
-            assert False, "Expected an exception for missing required fields"
+            raise AssertionError("Expected an exception for missing required fields")
         except Exception as e:
             # SQLModel/SQLAlchemy may raise different exception types
             assert True, f"Required field validation works: {type(e).__name__}: {e}"

@@ -9,8 +9,6 @@ import json
 from datetime import datetime
 from unittest.mock import patch
 
-import pytest
-
 from app.models import Job, JobStatus
 
 
@@ -180,7 +178,7 @@ class TestJobModel:
         # NOTE: Required field validation still works in SQLModel table mode
         try:
             Job()  # Missing required request_text
-            assert False, "Expected an exception for missing required fields"
+            raise AssertionError("Expected an exception for missing required fields")
         except Exception as e:
             # SQLModel/SQLAlchemy may raise different exception types
             assert True, f"Required field validation works: {type(e).__name__}: {e}"

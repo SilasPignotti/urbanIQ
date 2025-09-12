@@ -9,8 +9,6 @@ import json
 from datetime import datetime
 from unittest.mock import patch
 
-import pytest
-
 from app.models import ConnectorType, DataSource, HealthStatus
 
 
@@ -304,7 +302,7 @@ class TestDataSourceModel:
         # However, the exception type and message may be different
         try:
             DataSource()  # Missing all required fields
-            assert False, "Expected an exception for missing required fields"
+            raise AssertionError("Expected an exception for missing required fields")
         except Exception as e:
             # SQLModel/SQLAlchemy may raise different exception types
             assert True, f"Required field validation works: {type(e).__name__}: {e}"
@@ -314,7 +312,7 @@ class TestDataSourceModel:
                 name="Test",
                 # Missing connector_type, service_url, category, metadata_json
             )
-            assert False, "Expected an exception for missing required fields"
+            raise AssertionError("Expected an exception for missing required fields")
         except Exception as e:
             # SQLModel/SQLAlchemy may raise different exception types
             assert True, f"Required field validation works: {type(e).__name__}: {e}"
