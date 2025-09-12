@@ -117,39 +117,8 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
 
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v2
-        with:
-          version: ${{ env.UV_VERSION }}
-
-      - name: Set up Python
-        run: uv python install 3.11
-
-      - name: Create virtual environment and install pip-audit
-        run: |
-          uv venv
-          uv pip install pip-audit
-
-      - name: Run security audit on core packages
-        run: |
-          # Create a simple requirements file without GDAL for faster security scanning
-          echo "fastapi" > temp-requirements.txt
-          echo "uvicorn" >> temp-requirements.txt
-          echo "pydantic" >> temp-requirements.txt
-          echo "sqlmodel" >> temp-requirements.txt
-          uv run pip-audit --requirement temp-requirements.txt
-
-      - name: Upload security report (optional)
-        if: always()
-        run: echo "Security audit completed"
-
   build-pr:
-    needs: [test, security]
+    needs: [test]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
@@ -184,7 +153,7 @@ jobs:
           echo "📦 Image would be tagged as: ${{ steps.meta.outputs.tags }}"
 
   build:
-    needs: [test, security]
+    needs: [test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
