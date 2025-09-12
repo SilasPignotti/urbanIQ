@@ -1,7 +1,11 @@
-FROM python:3.11-slim as base
+FROM ubuntu:24.04 as base
 
-# System dependencies for GeoPandas with latest GDAL
+# Install Python 3.11 and system dependencies for GeoPandas with latest GDAL
 RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-dev \
+    python3.11-venv \
+    python3-pip \
     software-properties-common \
     && add-apt-repository ppa:ubuntugis/ubuntugis-unstable -y \
     && apt-get update \
@@ -16,6 +20,10 @@ RUN apt-get update && apt-get install -y \
     libspatialindex-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.11 as default
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
 
 # Set GDAL environment variables
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
