@@ -107,7 +107,8 @@ class DataSource(SQLModel, table=True):
 
     def get_metadata(self) -> dict[str, Any]:
         """Parse and return metadata as dictionary."""
-        return json.loads(self.metadata_json)
+        metadata: dict[str, Any] = json.loads(self.metadata_json)
+        return metadata
 
     def update_health_status(self, status: HealthStatus) -> None:
         """Update health check status and timestamp."""

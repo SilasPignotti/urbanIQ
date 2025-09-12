@@ -51,7 +51,7 @@ def create_db_and_tables() -> None:
 def init_database() -> None:
     """
     Initialize database with tables and ensure required directories exist.
-    
+
     This function is intended to be called on application startup
     to ensure the database is ready for use.
     """
@@ -65,7 +65,7 @@ def init_database() -> None:
 def drop_db_and_tables() -> None:
     """
     Drop all database tables.
-    
+
     WARNING: This will delete all data! Only use for testing or
     complete database resets.
     """

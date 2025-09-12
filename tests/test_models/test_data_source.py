@@ -19,10 +19,7 @@ class TestDataSourceModel:
 
     def test_data_source_creation_with_required_fields(self):
         """Test DataSource creation with required fields only."""
-        metadata_json = json.dumps({
-            "license": "CC BY 3.0 DE",
-            "update_frequency": "monthly"
-        })
+        metadata_json = json.dumps({"license": "CC BY 3.0 DE", "update_frequency": "monthly"})
 
         data_source = DataSource(
             name="Berlin Buildings",
@@ -48,11 +45,9 @@ class TestDataSourceModel:
 
     def test_data_source_creation_with_all_fields(self):
         """Test DataSource creation with all fields specified."""
-        metadata_json = json.dumps({
-            "license": "CC BY 3.0 DE",
-            "quality": "high",
-            "update_frequency": "daily"
-        })
+        metadata_json = json.dumps(
+            {"license": "CC BY 3.0 DE", "quality": "high", "update_frequency": "daily"}
+        )
 
         data_source = DataSource(
             name="OSM Transport Stops",
@@ -122,11 +117,9 @@ class TestDataSourceModel:
 
     def test_metadata_json_validation_valid_json(self):
         """Test metadata_json validation accepts valid JSON objects."""
-        valid_metadata = json.dumps({
-            "license": "CC BY 3.0 DE",
-            "quality": "high",
-            "nested": {"key": "value"}
-        })
+        valid_metadata = json.dumps(
+            {"license": "CC BY 3.0 DE", "quality": "high", "nested": {"key": "value"}}
+        )
 
         data_source = DataSource(
             name="Test Source",
@@ -171,11 +164,7 @@ class TestDataSourceModel:
 
     def test_get_metadata_method(self):
         """Test get_metadata method."""
-        metadata_dict = {
-            "license": "CC BY 3.0 DE",
-            "quality": "high",
-            "update_frequency": "daily"
-        }
+        metadata_dict = {"license": "CC BY 3.0 DE", "quality": "high", "update_frequency": "daily"}
         metadata_json = json.dumps(metadata_dict)
 
         data_source = DataSource(

@@ -464,9 +464,9 @@ wheels = [
 
 [[package]]
 name = "gdal"
-version = "3.11.3"
+version = "3.9.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/88/e8/f77e577b6d99ddf1fd69dfc6233b9deea0f94445bc979ef56652681caed1/gdal-3.11.3.tar.gz", hash = "sha256:4c3ad0fae393b5ddb093a7e4b890077839b2a6acdbd19202657fe4e881886efa", size = 878190, upload-time = "2025-07-12T11:07:16.975Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/53/3d/aa2f485d00751546e3c68dda6804f62f3589a8d62074b5b2b5ea2000053e/gdal-3.9.3.tar.gz", hash = "sha256:b4026010883b37d159fa43aee3ecb28bb466bd9d7e085c4d623d858edd6c62b9", size = 840806, upload-time = "2024-10-14T14:04:23.944Z" }
 
 [[package]]
 name = "geopandas"
@@ -2391,7 +2391,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.13.0" },
     { name = "fastapi", specifier = ">=0.104.0" },
     { name = "fiona", specifier = ">=1.9.0" },
-    { name = "gdal", specifier = ">=3.7.0" },
+    { name = "gdal", specifier = ">=3.4.0,<3.10.0" },
     { name = "geopandas", specifier = ">=0.14.0" },
     { name = "google-generativeai", specifier = ">=0.3.0" },
     { name = "gunicorn", marker = "extra == 'production'", specifier = ">=21.2.0" },
