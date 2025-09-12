@@ -199,4 +199,5 @@ class BaseConnector(ABC):
         Default implementation does nothing, but can be overridden
         by concrete classes that need cleanup (e.g., closing connections).
         """
-        pass
+        # Default implementation - no cleanup needed for base connector
+        return
