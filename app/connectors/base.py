@@ -7,7 +7,7 @@ error handling, and logging for all connector implementations.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Dict
 
 import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
@@ -57,7 +57,7 @@ class BaseConnector(ABC):
         """
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
-        self._client_config = {
+        self._client_config: Dict[str, Any] = {
             "timeout": httpx.Timeout(timeout),
             "headers": {"User-Agent": "urbanIQ/0.1.0 Berlin Geodata Aggregation System"},
         }
@@ -146,7 +146,8 @@ class BaseConnector(ABC):
         response = await self._make_request("GET", url, params=params)
 
         try:
-            return response.json()
+            json_data: Dict[str, Any] = response.json()
+            return json_data
         except Exception as e:
             error_msg = f"Failed to parse JSON response: {str(e)}"
             logger.error(error_msg)
