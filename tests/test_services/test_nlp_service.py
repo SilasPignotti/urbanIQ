@@ -146,7 +146,10 @@ class TestNLPService:
 
     def test_nlp_service_initialization_fails_without_api_key(self):
         """Test NLPService initialization fails without API key."""
-        with patch("app.services.nlp_service.settings.google_api_key", ""), pytest.raises(ValueError, match="Google API key not configured"):
+        with (
+            patch("app.services.nlp_service.settings.google_api_key", ""),
+            pytest.raises(ValueError, match="Google API key not configured"),
+        ):
             NLPService()
 
     @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
