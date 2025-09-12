@@ -13,6 +13,9 @@ from sqlmodel import Session, SQLModel
 
 from app.config import settings
 
+# Import models to ensure they are registered with SQLModel metadata
+from app.models import DataSource, Job, Package  # noqa: F401
+
 
 def get_engine() -> Engine:
     """Create and configure SQLite engine."""
@@ -43,6 +46,30 @@ engine = get_engine()
 def create_db_and_tables() -> None:
     """Create database and all tables."""
     SQLModel.metadata.create_all(engine)
+
+
+def init_database() -> None:
+    """
+    Initialize database with tables and ensure required directories exist.
+    
+    This function is intended to be called on application startup
+    to ensure the database is ready for use.
+    """
+    # Ensure required directories exist
+    settings.ensure_directories()
+
+    # Create tables if they don't exist
+    create_db_and_tables()
+
+
+def drop_db_and_tables() -> None:
+    """
+    Drop all database tables.
+    
+    WARNING: This will delete all data! Only use for testing or
+    complete database resets.
+    """
+    SQLModel.metadata.drop_all(engine)
 
 
 def get_session() -> Generator[Session, None, None]:
