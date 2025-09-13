@@ -353,7 +353,9 @@ class ProcessingService:
         return gpd.GeoDataFrame(standardized_data, crs=gdf.crs)
 
     def _calculate_quality_stats(
-        self, harmonized_gdf: gpd.GeoDataFrame, processing_stats: dict[str, Any]  # noqa: ARG002
+        self,
+        harmonized_gdf: gpd.GeoDataFrame,
+        processing_stats: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
         """
         Calculate comprehensive quality assurance statistics.

@@ -46,45 +46,34 @@ class TestHarmonizeDatasets:
     def sample_district_boundary(self):
         """Create sample district boundary GeoDataFrame."""
         polygon = Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])
-        return gpd.GeoDataFrame(
-            {"bezirk_name": ["Pankow"]},
-            geometry=[polygon],
-            crs=TARGET_CRS
-        )
+        return gpd.GeoDataFrame({"bezirk_name": ["Pankow"]}, geometry=[polygon], crs=TARGET_CRS)
 
     @pytest.fixture
     def sample_buildings(self):
         """Create sample buildings GeoDataFrame."""
-        geometries = [
-            Point(2, 2),
-            Point(5, 5),
-            Point(8, 8)
-        ]
+        geometries = [Point(2, 2), Point(5, 5), Point(8, 8)]
         return gpd.GeoDataFrame(
             {
                 "nutzung": ["Wohnen", "Buero", "Handel"],
                 "geschosse": [3, 8, 2],
-                "baujahr": [1980, 2010, 1995]
+                "baujahr": [1980, 2010, 1995],
             },
             geometry=geometries,
-            crs=TARGET_CRS
+            crs=TARGET_CRS,
         )
 
     @pytest.fixture
     def sample_transport_stops(self):
         """Create sample transport stops GeoDataFrame."""
-        geometries = [
-            Point(3, 3),
-            Point(7, 7)
-        ]
+        geometries = [Point(3, 3), Point(7, 7)]
         return gpd.GeoDataFrame(
             {
                 "name": ["Bahnhof Pankow", "S Bornholmer Str"],
                 "operator": ["DB", "S-Bahn Berlin"],
-                "transport_mode": ["train", "light_rail"]
+                "transport_mode": ["train", "light_rail"],
             },
             geometry=geometries,
-            crs=TARGET_CRS
+            crs=TARGET_CRS,
         )
 
     @pytest.fixture
@@ -97,7 +86,7 @@ class TestHarmonizeDatasets:
                 "source": "geoportal",
                 "geodata": sample_district_boundary,
                 "predefined_metadata": {"name": "District Boundaries"},
-                "runtime_stats": {"feature_count": 1}
+                "runtime_stats": {"feature_count": 1},
             },
             {
                 "dataset_id": "gebaeude_pankow",
@@ -105,7 +94,7 @@ class TestHarmonizeDatasets:
                 "source": "geoportal",
                 "geodata": sample_buildings,
                 "predefined_metadata": {"name": "Buildings"},
-                "runtime_stats": {"feature_count": 3}
+                "runtime_stats": {"feature_count": 3},
             },
             {
                 "dataset_id": "oepnv_haltestellen_pankow",
@@ -113,8 +102,8 @@ class TestHarmonizeDatasets:
                 "source": "osm",
                 "geodata": sample_transport_stops,
                 "predefined_metadata": {"name": "Transport Stops"},
-                "runtime_stats": {"feature_count": 2}
-            }
+                "runtime_stats": {"feature_count": 2},
+            },
         ]
 
     @pytest.mark.asyncio
@@ -143,7 +132,11 @@ class TestHarmonizeDatasets:
 
         # Validate data content
         assert all(harmonized_gdf["bezirk"] == "Pankow")
-        assert set(harmonized_gdf["dataset_type"]) == {"bezirksgrenzen", "gebaeude", "oepnv_haltestellen"}
+        assert set(harmonized_gdf["dataset_type"]) == {
+            "bezirksgrenzen",
+            "gebaeude",
+            "oepnv_haltestellen",
+        }
         assert set(harmonized_gdf["source_system"]) == {"geoportal", "osm"}
 
         # Validate processing stats
@@ -172,7 +165,7 @@ class TestHarmonizeDatasets:
                 "source": "geoportal",
                 "geodata": sample_buildings,
                 "predefined_metadata": {"name": "Buildings"},
-                "runtime_stats": {"feature_count": 3}
+                "runtime_stats": {"feature_count": 3},
             }
         ]
 
@@ -192,7 +185,7 @@ class TestHarmonizeDatasets:
                 "source": "geoportal",
                 "geodata": sample_district_boundary,
                 "predefined_metadata": {"name": "District"},
-                "runtime_stats": {"feature_count": 1}
+                "runtime_stats": {"feature_count": 1},
             },
             {
                 "dataset_id": "gebaeude_pankow",
@@ -200,7 +193,7 @@ class TestHarmonizeDatasets:
                 "source": "geoportal",
                 "geodata": sample_buildings,
                 "predefined_metadata": {"name": "Buildings"},
-                "runtime_stats": {"feature_count": 3}
+                "runtime_stats": {"feature_count": 3},
             },
             {
                 "dataset_id": "invalid_dataset",
@@ -208,15 +201,19 @@ class TestHarmonizeDatasets:
                 "source": "geoportal",
                 "geodata": None,  # This will cause failure
                 "predefined_metadata": {"name": "Invalid"},
-                "runtime_stats": {"feature_count": 0}
-            }
+                "runtime_stats": {"feature_count": 0},
+            },
         ]
 
-        with patch.object(service, '_process_single_dataset', side_effect=[
-            sample_district_boundary,  # Success for district
-            sample_buildings,  # Success for buildings
-            Exception("Processing failed")  # Failure for invalid dataset
-        ]):
+        with patch.object(
+            service,
+            "_process_single_dataset",
+            side_effect=[
+                sample_district_boundary,  # Success for district
+                sample_buildings,  # Success for buildings
+                Exception("Processing failed"),  # Failure for invalid dataset
+            ],
+        ):
             result = await service.harmonize_datasets(datasets, "Pankow")
 
             assert result["processing_stats"]["datasets_processed"] == 2
@@ -261,7 +258,7 @@ class TestCRSStandardization:
         geometry = [Point(0, 0), Point(1, 1)]
         gdf = gpd.GeoDataFrame({"name": ["A", "B"]}, geometry=geometry)  # No CRS
 
-        with patch('app.services.processing_service.logger') as mock_logger:
+        with patch("app.services.processing_service.logger") as mock_logger:
             result = service._standardize_crs(gdf)
 
             assert result.crs == TARGET_CRS
@@ -287,7 +284,9 @@ class TestSpatialClipping:
 
         # Create boundary polygon
         boundary_geom = Polygon([(0, 0), (5, 0), (5, 5), (0, 5)])
-        boundary = gpd.GeoDataFrame({"name": ["District"]}, geometry=[boundary_geom], crs=TARGET_CRS)
+        boundary = gpd.GeoDataFrame(
+            {"name": ["District"]}, geometry=[boundary_geom], crs=TARGET_CRS
+        )
 
         # Create points - some inside, some outside boundary
         points = [Point(2, 2), Point(7, 7), Point(3, 3)]  # 2 inside, 1 outside
@@ -305,7 +304,9 @@ class TestSpatialClipping:
 
         # Create boundary in different CRS
         boundary_geom = Polygon([(13.4, 52.5), (13.5, 52.5), (13.5, 52.6), (13.4, 52.6)])
-        boundary = gpd.GeoDataFrame({"name": ["District"]}, geometry=[boundary_geom], crs="EPSG:4326")
+        boundary = gpd.GeoDataFrame(
+            {"name": ["District"]}, geometry=[boundary_geom], crs="EPSG:4326"
+        )
 
         # Create data in target CRS
         points = [Point(400000, 5820000)]  # Approximate Berlin coordinates in UTM
@@ -321,20 +322,22 @@ class TestSpatialClipping:
         service = ProcessingService()
 
         boundary_geom = Polygon([(0, 0), (5, 0), (5, 5), (0, 5)])
-        boundary = gpd.GeoDataFrame({"name": ["District"]}, geometry=[boundary_geom], crs=TARGET_CRS)
+        boundary = gpd.GeoDataFrame(
+            {"name": ["District"]}, geometry=[boundary_geom], crs=TARGET_CRS
+        )
 
         points = [Point(2, 2)]
         gdf = gpd.GeoDataFrame({"id": [1]}, geometry=points, crs=TARGET_CRS)
 
         with (
-            patch('geopandas.clip', side_effect=Exception("Clipping failed")),
-            patch('app.services.processing_service.logger') as mock_logger,
+            patch("geopandas.clip", side_effect=Exception("Clipping failed")),
+            patch("app.services.processing_service.logger") as mock_logger,
         ):
-                result = service._clip_to_boundary(gdf, boundary)
+            result = service._clip_to_boundary(gdf, boundary)
 
-                # Should return original data on failure
-                assert len(result) == 1
-                mock_logger.warning.assert_called_once()
+            # Should return original data on failure
+            assert len(result) == 1
+            mock_logger.warning.assert_called_once()
 
     def test_clip_to_boundary_empty_inputs(self):
         """Test clipping with empty GeoDataFrames."""
@@ -371,12 +374,10 @@ class TestGeometryValidation:
         valid_point = Point(1, 1)
 
         gdf = gpd.GeoDataFrame(
-            {"id": [1, 2]},
-            geometry=[invalid_polygon, valid_point],
-            crs=TARGET_CRS
+            {"id": [1, 2]}, geometry=[invalid_polygon, valid_point], crs=TARGET_CRS
         )
 
-        with patch('app.services.processing_service.logger') as mock_logger:
+        with patch("app.services.processing_service.logger") as mock_logger:
             result = service._validate_geometries(gdf)
 
             # Should clean invalid geometry
@@ -394,17 +395,21 @@ class TestGeometryValidation:
 
         # Mock is_valid to return False even after cleaning
         with (
-            patch.object(gdf.geometry, 'is_valid', side_effect=[
-                pd.Series([False]),  # First check - invalid
-                pd.Series([False])   # After buffer(0) - still invalid
-            ]),
-            patch('app.services.processing_service.logger') as mock_logger,
+            patch.object(
+                gdf.geometry,
+                "is_valid",
+                side_effect=[
+                    pd.Series([False]),  # First check - invalid
+                    pd.Series([False]),  # After buffer(0) - still invalid
+                ],
+            ),
+            patch("app.services.processing_service.logger") as mock_logger,
         ):
-                result = service._validate_geometries(gdf)
+            result = service._validate_geometries(gdf)
 
-                # Should remove uncleansable geometries
-                assert len(result) == 0
-                mock_logger.error.assert_called()
+            # Should remove uncleansable geometries
+            assert len(result) == 0
+            mock_logger.error.assert_called()
 
     def test_validate_geometries_empty_dataframe(self):
         """Test geometry validation with empty GeoDataFrame."""
@@ -425,13 +430,9 @@ class TestSchemaStandardization:
 
         geometry = [Point(0, 0), Point(1, 1)]
         gdf = gpd.GeoDataFrame(
-            {
-                "original_id": ["A", "B"],
-                "name": ["Building A", "Building B"],
-                "height": [10, 20]
-            },
+            {"original_id": ["A", "B"], "name": ["Building A", "Building B"], "height": [10, 20]},
             geometry=geometry,
-            crs=TARGET_CRS
+            crs=TARGET_CRS,
         )
 
         result = service._standardize_schema(gdf, "gebaeude", "geoportal", "Pankow")
@@ -456,7 +457,9 @@ class TestSchemaStandardization:
         service = ProcessingService()
 
         # Create empty GeoDataFrame with geometry column
-        empty_gdf = gpd.GeoDataFrame(columns=["name"], geometry=gpd.GeoSeries([], crs=TARGET_CRS), crs=TARGET_CRS)
+        empty_gdf = gpd.GeoDataFrame(
+            columns=["name"], geometry=gpd.GeoSeries([], crs=TARGET_CRS), crs=TARGET_CRS
+        )
         result = service._standardize_schema(empty_gdf, "gebaeude", "geoportal", "Pankow")
 
         assert result.crs == TARGET_CRS
@@ -494,10 +497,10 @@ class TestQualityAssurance:
                 "dataset_type": ["bezirksgrenzen", "gebaeude", "oepnv_haltestellen"],
                 "source_system": ["geoportal", "geoportal", "osm"],
                 "bezirk": ["Pankow", "Pankow", "Pankow"],
-                "original_attributes": [{"name": "Pankow"}, {"height": 10}, {"name": "Station"}]
+                "original_attributes": [{"name": "Pankow"}, {"height": 10}, {"name": "Station"}],
             },
             geometry=geometry,
-            crs=TARGET_CRS
+            crs=TARGET_CRS,
         )
 
         processing_stats = {"datasets_processed": 3, "datasets_failed": 0}
@@ -541,10 +544,10 @@ class TestQualityAssurance:
                 "dataset_type": ["gebaeude", None],  # One missing dataset_type
                 "source_system": ["geoportal", "geoportal"],
                 "bezirk": ["Pankow", "Pankow"],
-                "original_attributes": [{"height": 10}, {"height": 20}]
+                "original_attributes": [{"height": 10}, {"height": 20}],
             },
             geometry=geometry,
-            crs=TARGET_CRS
+            crs=TARGET_CRS,
         )
 
         processing_stats = {"datasets_processed": 1, "datasets_failed": 1}
@@ -565,37 +568,27 @@ class TestIntegration:
         service = ProcessingService()
 
         # Create realistic Berlin district boundary
-        district_polygon = Polygon([
-            (13.4, 52.5), (13.5, 52.5), (13.5, 52.6), (13.4, 52.6)
-        ])
+        district_polygon = Polygon([(13.4, 52.5), (13.5, 52.5), (13.5, 52.6), (13.4, 52.6)])
         district_gdf = gpd.GeoDataFrame(
             {"bezirk_name": ["Pankow"], "bezirk_schluessel": ["03"]},
             geometry=[district_polygon],
-            crs="EPSG:4326"  # Start in WGS84
+            crs="EPSG:4326",  # Start in WGS84
         )
 
         # Create buildings data
         building_points = [Point(13.42, 52.52), Point(13.48, 52.58)]
         buildings_gdf = gpd.GeoDataFrame(
-            {
-                "nutzung": ["Wohnen", "Buero"],
-                "geschosse": [4, 12],
-                "baujahr": [1985, 2015]
-            },
+            {"nutzung": ["Wohnen", "Buero"], "geschosse": [4, 12], "baujahr": [1985, 2015]},
             geometry=building_points,
-            crs="EPSG:4326"
+            crs="EPSG:4326",
         )
 
         # Create transport stops
         stop_points = [Point(13.43, 52.53)]
         transport_gdf = gpd.GeoDataFrame(
-            {
-                "name": ["S Pankow"],
-                "operator": ["S-Bahn Berlin"],
-                "transport_mode": ["light_rail"]
-            },
+            {"name": ["S Pankow"], "operator": ["S-Bahn Berlin"], "transport_mode": ["light_rail"]},
             geometry=stop_points,
-            crs="EPSG:4326"
+            crs="EPSG:4326",
         )
 
         # Create DataService-compatible input
@@ -606,7 +599,7 @@ class TestIntegration:
                 "source": "geoportal",
                 "geodata": district_gdf,
                 "predefined_metadata": {"name": "District Boundaries"},
-                "runtime_stats": {"feature_count": 1}
+                "runtime_stats": {"feature_count": 1},
             },
             {
                 "dataset_id": "gebaeude_pankow",
@@ -614,7 +607,7 @@ class TestIntegration:
                 "source": "geoportal",
                 "geodata": buildings_gdf,
                 "predefined_metadata": {"name": "Buildings"},
-                "runtime_stats": {"feature_count": 2}
+                "runtime_stats": {"feature_count": 2},
             },
             {
                 "dataset_id": "oepnv_haltestellen_pankow",
@@ -622,8 +615,8 @@ class TestIntegration:
                 "source": "osm",
                 "geodata": transport_gdf,
                 "predefined_metadata": {"name": "Transport"},
-                "runtime_stats": {"feature_count": 1}
-            }
+                "runtime_stats": {"feature_count": 1},
+            },
         ]
 
         # Execute harmonization
@@ -660,7 +653,7 @@ class TestIntegration:
                 "source": "geoportal",
                 "geodata": "not_a_geodataframe",  # Invalid type
                 "predefined_metadata": {},
-                "runtime_stats": {}
+                "runtime_stats": {},
             }
         ]
 
@@ -676,12 +669,7 @@ class TestErrorHandling:
         """Test district boundary extraction when not present."""
         service = ProcessingService()
 
-        datasets = [
-            {
-                "dataset_type": "gebaeude",
-                "geodata": gpd.GeoDataFrame()
-            }
-        ]
+        datasets = [{"dataset_type": "gebaeude", "geodata": gpd.GeoDataFrame()}]
 
         with pytest.raises(ValueError, match="District boundary dataset not found"):
             service._extract_district_boundary(datasets, "Pankow")
@@ -691,12 +679,7 @@ class TestErrorHandling:
         service = ProcessingService()
 
         empty_boundary = gpd.GeoDataFrame(geometry=[], crs=TARGET_CRS)
-        datasets = [
-            {
-                "dataset_type": "bezirksgrenzen",
-                "geodata": empty_boundary
-            }
-        ]
+        datasets = [{"dataset_type": "bezirksgrenzen", "geodata": empty_boundary}]
 
         with pytest.raises(ValueError, match="Empty district boundary"):
             service._extract_district_boundary(datasets, "Pankow")
@@ -709,13 +692,13 @@ class TestErrorHandling:
         boundary = gpd.GeoDataFrame(
             {"name": ["District"]},
             geometry=[Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])],
-            crs=TARGET_CRS
+            crs=TARGET_CRS,
         )
 
         dataset = {
             "dataset_type": "gebaeude",
             "source": "geoportal",
-            "geodata": gpd.GeoDataFrame(geometry=[], crs=TARGET_CRS)  # Empty
+            "geodata": gpd.GeoDataFrame(geometry=[], crs=TARGET_CRS),  # Empty
         }
 
         result = await service._process_single_dataset(dataset, boundary, "Pankow")
