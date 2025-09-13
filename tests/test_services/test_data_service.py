@@ -311,9 +311,8 @@ class TestFetchSingleDataset:
             service._district_connector,
             "fetch_district_boundary",
             side_effect=ServiceUnavailableError("Service down"),
-        ):
-            with pytest.raises(ConnectorError, match="Failed to fetch bezirksgrenzen"):
-                await service._fetch_single_dataset("Pankow", "bezirksgrenzen")
+        ), pytest.raises(ConnectorError, match="Failed to fetch bezirksgrenzen"):
+            await service._fetch_single_dataset("Pankow", "bezirksgrenzen")
 
 
 class TestRuntimeStatistics:
@@ -491,9 +490,8 @@ class TestErrorScenarios:
             service._district_connector,
             "fetch_district_boundary",
             side_effect=TimeoutError("Request timeout"),
-        ):
-            with pytest.raises(ConnectorError):
-                await service._fetch_single_dataset("Pankow", "bezirksgrenzen")
+        ), pytest.raises(ConnectorError):
+            await service._fetch_single_dataset("Pankow", "bezirksgrenzen")
 
     async def test_malformed_response_handling(self):
         """Test handling of malformed API responses."""
@@ -503,9 +501,8 @@ class TestErrorScenarios:
             service._district_connector,
             "fetch_district_boundary",
             side_effect=ValueError("Invalid response format"),
-        ):
-            with pytest.raises(ConnectorError):
-                await service._fetch_single_dataset("Pankow", "bezirksgrenzen")
+        ), pytest.raises(ConnectorError):
+            await service._fetch_single_dataset("Pankow", "bezirksgrenzen")
 
     async def test_concurrent_request_handling(self):
         """Test handling of multiple concurrent requests."""

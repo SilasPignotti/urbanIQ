@@ -392,7 +392,9 @@ class DataService:
         return health_status
 
     async def _test_single_connector_health(
-        self, name: str, connector: DistrictBoundariesConnector | BuildingsConnector | OverpassConnector
+        self,
+        name: str,
+        connector: DistrictBoundariesConnector | BuildingsConnector | OverpassConnector,
     ) -> bool:
         """
         Test health of a single connector.
