@@ -138,7 +138,7 @@ class TestHarmonizeDatasets:
         assert len(harmonized_gdf) == 6  # 1 district + 3 buildings + 2 transport stops
 
         # Validate standard schema
-        for col in STANDARD_SCHEMA.keys():
+        for col in STANDARD_SCHEMA:
             assert col in harmonized_gdf.columns
 
         # Validate data content
@@ -326,8 +326,10 @@ class TestSpatialClipping:
         points = [Point(2, 2)]
         gdf = gpd.GeoDataFrame({"id": [1]}, geometry=points, crs=TARGET_CRS)
 
-        with patch('geopandas.clip', side_effect=Exception("Clipping failed")):
-            with patch('app.services.processing_service.logger') as mock_logger:
+        with (
+            patch('geopandas.clip', side_effect=Exception("Clipping failed")),
+            patch('app.services.processing_service.logger') as mock_logger,
+        ):
                 result = service._clip_to_boundary(gdf, boundary)
 
                 # Should return original data on failure
@@ -391,11 +393,13 @@ class TestGeometryValidation:
         gdf = gpd.GeoDataFrame({"id": [1]}, geometry=[invalid_geom], crs=TARGET_CRS)
 
         # Mock is_valid to return False even after cleaning
-        with patch.object(gdf.geometry, 'is_valid', side_effect=[
-            pd.Series([False]),  # First check - invalid
-            pd.Series([False])   # After buffer(0) - still invalid
-        ]):
-            with patch('app.services.processing_service.logger') as mock_logger:
+        with (
+            patch.object(gdf.geometry, 'is_valid', side_effect=[
+                pd.Series([False]),  # First check - invalid
+                pd.Series([False])   # After buffer(0) - still invalid
+            ]),
+            patch('app.services.processing_service.logger') as mock_logger,
+        ):
                 result = service._validate_geometries(gdf)
 
                 # Should remove uncleansable geometries
@@ -433,7 +437,7 @@ class TestSchemaStandardization:
         result = service._standardize_schema(gdf, "gebaeude", "geoportal", "Pankow")
 
         # Validate standard schema columns
-        for col in STANDARD_SCHEMA.keys():
+        for col in STANDARD_SCHEMA:
             assert col in result.columns
 
         # Validate data content
@@ -633,7 +637,7 @@ class TestIntegration:
 
         # Should have all features with standard schema
         assert len(harmonized_data) == 4  # 1 district + 2 buildings + 1 transport
-        assert all(col in harmonized_data.columns for col in STANDARD_SCHEMA.keys())
+        assert all(col in harmonized_data.columns for col in STANDARD_SCHEMA)
 
         # All features should be within or related to district
         assert all(harmonized_data["bezirk"] == "Pankow")
