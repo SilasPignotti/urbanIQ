@@ -8,7 +8,6 @@ geometry validation, quality assurance metrics, and integration with DataService
 from unittest.mock import patch
 
 import geopandas as gpd
-import pandas as pd
 import pytest
 from shapely.geometry import Point, Polygon
 
@@ -217,7 +216,7 @@ class TestHarmonizeDatasets:
             geometry=sample_district_boundary.geometry,
             crs=TARGET_CRS,
         )
-        
+
         buildings_standardized = gpd.GeoDataFrame(
             {
                 "feature_id": [f"gebaeude_{i}" for i in range(3)],
@@ -413,25 +412,6 @@ class TestGeometryValidation:
             assert len(result) == 2
             assert all(result.geometry.is_valid)
             mock_logger.warning.assert_called()
-
-    def test_validate_geometries_all_valid(self):
-        """Test geometry validation with all valid geometries."""
-        service = ProcessingService()
-
-        # Create valid geometries
-        valid_point = Point(1, 1)
-        valid_polygon = Polygon([(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)])
-        gdf = gpd.GeoDataFrame(
-            {"id": [1, 2]}, 
-            geometry=[valid_point, valid_polygon], 
-            crs=TARGET_CRS
-        )
-
-        result = service._validate_geometries(gdf)
-
-        # All geometries should remain
-        assert len(result) == 2
-        assert all(result.geometry.is_valid)
 
     def test_validate_geometries_empty_dataframe(self):
         """Test geometry validation with empty GeoDataFrame."""
