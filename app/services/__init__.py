@@ -7,7 +7,7 @@ from .processing_service import ProcessingError, ProcessingService
 
 __all__ = [
     "NLPService",
-    "ParsedRequest", 
+    "ParsedRequest",
     "DataService",
     "ProcessingService",
     "ProcessingError",

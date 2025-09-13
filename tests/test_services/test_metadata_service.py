@@ -5,19 +5,14 @@ Comprehensive test suite covering template rendering, Gemini AI integration,
 quality assessment processing, and multilingual support.
 """
 
-import json
-from datetime import datetime
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from jinja2 import TemplateNotFound
 
 from app.services.metadata_service import (
-    LLMError,
     MetadataError,
     MetadataService,
-    TemplateError,
 )
 
 
@@ -28,9 +23,9 @@ class TestMetadataServiceInitialization:
         """Test service initialization when Google API key is not configured."""
         with patch("app.services.metadata_service.settings") as mock_settings:
             mock_settings.google_api_key = None
-            
+
             service = MetadataService()
-            
+
             assert service.llm is None
             assert service.template_env is not None
 
@@ -38,10 +33,10 @@ class TestMetadataServiceInitialization:
         """Test service initialization with valid Google API key."""
         with patch("app.services.metadata_service.settings") as mock_settings:
             mock_settings.google_api_key = "test-api-key"
-            
+
             with patch("app.services.metadata_service.ChatGoogleGenerativeAI") as mock_llm:
                 service = MetadataService()
-                
+
                 assert service.llm is not None
                 mock_llm.assert_called_once()
 
@@ -49,19 +44,22 @@ class TestMetadataServiceInitialization:
         """Test service initialization with invalid Google API key."""
         with patch("app.services.metadata_service.settings") as mock_settings:
             mock_settings.google_api_key = "invalid-key"
-            
-            with patch("app.services.metadata_service.ChatGoogleGenerativeAI", side_effect=Exception("API error")):
+
+            with patch(
+                "app.services.metadata_service.ChatGoogleGenerativeAI",
+                side_effect=Exception("API error"),
+            ):
                 service = MetadataService()
-                
+
                 assert service.llm is None
 
     def test_template_environment_setup(self):
         """Test Jinja2 template environment configuration."""
         with patch("app.services.metadata_service.settings") as mock_settings:
             mock_settings.google_api_key = None
-            
+
             service = MetadataService()
-            
+
             assert service.template_env is not None
             assert "number_format" in service.template_env.filters
 
@@ -82,7 +80,7 @@ class TestCreateMetadataReport:
         return [
             {
                 "dataset_id": "bezirksgrenzen_pankow",
-                "dataset_type": "bezirksgrenzen", 
+                "dataset_type": "bezirksgrenzen",
                 "source": "geoportal",
                 "predefined_metadata": {
                     "name": "Bezirksgrenzen Berlin",
@@ -99,7 +97,7 @@ class TestCreateMetadataReport:
             {
                 "dataset_id": "gebaeude_pankow",
                 "dataset_type": "gebaeude",
-                "source": "geoportal", 
+                "source": "geoportal",
                 "predefined_metadata": {
                     "name": "Gebäudedaten Berlin",
                     "description": "Building footprints and usage data",
@@ -120,11 +118,9 @@ class TestCreateMetadataReport:
             mock_template = Mock()
             mock_template.render.return_value = "# Geodaten-Metadatenreport: Pankow\n\nTest report"
             mock_get_template.return_value = mock_template
-            
-            report = service.create_metadata_report(
-                sample_datasets, "Pankow", {"language": "de"}
-            )
-            
+
+            report = service.create_metadata_report(sample_datasets, "Pankow", {"language": "de"})
+
             assert "Geodaten-Metadatenreport: Pankow" in report
             mock_get_template.assert_called_once_with("geodata_report_de.md")
 
@@ -134,11 +130,9 @@ class TestCreateMetadataReport:
             mock_template = Mock()
             mock_template.render.return_value = "# Geodata Metadata Report: Pankow\n\nTest report"
             mock_get_template.return_value = mock_template
-            
-            report = service.create_metadata_report(
-                sample_datasets, "Pankow", {"language": "en"}
-            )
-            
+
+            report = service.create_metadata_report(sample_datasets, "Pankow", {"language": "en"})
+
             assert "Geodata Metadata Report: Pankow" in report
             mock_get_template.assert_called_once_with("geodata_report_en.md")
 
@@ -153,18 +147,20 @@ class TestCreateMetadataReport:
             mock_template = Mock()
             mock_template.render.return_value = "# Geodaten-Metadatenreport: Pankow"
             mock_get_template.return_value = mock_template
-            
-            service.create_metadata_report(
-                sample_datasets, "Pankow", {"language": "fr"}
-            )
-            
+
+            service.create_metadata_report(sample_datasets, "Pankow", {"language": "fr"})
+
             mock_get_template.assert_called_once_with("geodata_report_de.md")
 
     def test_create_metadata_report_template_error(self, service, sample_datasets):
         """Test error handling for template rendering failures."""
-        with patch.object(service.template_env, "get_template", side_effect=TemplateNotFound("test")):
-            with pytest.raises(MetadataError):
-                service.create_metadata_report(sample_datasets, "Pankow", {})
+        with (
+            patch.object(
+                service.template_env, "get_template", side_effect=TemplateNotFound("test")
+            ),
+            pytest.raises(MetadataError),
+        ):
+            service.create_metadata_report(sample_datasets, "Pankow", {})
 
 
 class TestTemplateContextPreparation:
@@ -191,9 +187,9 @@ class TestTemplateContextPreparation:
                 "predefined_metadata": {},
             }
         ]
-        
+
         context = service._prepare_template_context(datasets, "Pankow", "de", {})
-        
+
         assert context["bezirk"] == "Pankow"
         assert context["dataset_count"] == 1
         assert context["total_features"] == 1000
@@ -214,7 +210,7 @@ class TestTemplateContextPreparation:
                 "predefined_metadata": {},
             },
             {
-                "dataset_type": "gebaeude", 
+                "dataset_type": "gebaeude",
                 "source": "geoportal",
                 "runtime_stats": {
                     "feature_count": 5000,
@@ -224,9 +220,9 @@ class TestTemplateContextPreparation:
                 "predefined_metadata": {},
             },
         ]
-        
+
         context = service._prepare_template_context(datasets, "Mitte", "en", {})
-        
+
         assert context["total_features"] == 5001
         assert context["dataset_count"] == 2
         assert "95.0" in context["coverage_percentage"]
@@ -246,9 +242,9 @@ class TestTemplateContextPreparation:
                 "update_frequency": "quarterly",
             },
         }
-        
+
         processed = service._process_dataset_for_template(dataset, "de")
-        
+
         assert processed["display_name"] == "Gebäudedaten Berlin"
         assert processed["source"] == "Geoportal"
         assert processed["license"] == "CC BY 3.0 DE"
@@ -266,9 +262,9 @@ class TestTemplateContextPreparation:
             },
             "predefined_metadata": {},
         }
-        
+
         processed = service._process_dataset_for_template(dataset, "en")
-        
+
         assert processed["display_name"] == "Public Transport Stops"
         assert processed["source"] == "Osm"
         assert processed["license"] == "Open Database License (ODbL)"
@@ -277,10 +273,10 @@ class TestTemplateContextPreparation:
     def test_extract_key_attributes_buildings(self, service):
         """Test key attribute extraction for building datasets."""
         dataset = {"dataset_type": "gebaeude"}
-        
+
         attributes_de = service._extract_key_attributes(dataset, "de")
         attributes_en = service._extract_key_attributes(dataset, "en")
-        
+
         assert len(attributes_de) == 3
         assert any(attr["name"] == "nutzung" for attr in attributes_de)
         assert any(attr["name"] == "nutzung" for attr in attributes_en)
@@ -290,9 +286,9 @@ class TestTemplateContextPreparation:
     def test_extract_key_attributes_transport(self, service):
         """Test key attribute extraction for transport datasets."""
         dataset = {"dataset_type": "oepnv_haltestellen"}
-        
+
         attributes = service._extract_key_attributes(dataset, "de")
-        
+
         assert len(attributes) == 3
         assert any(attr["name"] == "name" for attr in attributes)
         assert any(attr["name"] == "operator" for attr in attributes)
@@ -301,7 +297,7 @@ class TestTemplateContextPreparation:
         """Test usage notes generation for different dataset types."""
         buildings_note_de = service._generate_usage_notes("gebaeude", "de")
         buildings_note_en = service._generate_usage_notes("gebaeude", "en")
-        
+
         assert "Stadtplanung" in buildings_note_de
         assert "urban planning" in buildings_note_en
 
@@ -309,8 +305,8 @@ class TestTemplateContextPreparation:
         """Test spatial extent formatting."""
         extent = [13.123, 52.456, 13.789, 52.654]
         formatted = service._format_spatial_extent(extent)
-        
-        assert "[13.123, 52.456, 13.789, 52.654]" == formatted
+
+        assert formatted == "[13.123, 52.456, 13.789, 52.654]"
 
     def test_format_spatial_extent_invalid(self, service):
         """Test spatial extent formatting with invalid data."""
@@ -332,11 +328,11 @@ class TestLLMIntegration:
         """Create MetadataService with mocked LLM."""
         with patch("app.services.metadata_service.settings") as mock_settings:
             mock_settings.google_api_key = "test-key"
-            
+
             with patch("app.services.metadata_service.ChatGoogleGenerativeAI") as mock_llm_class:
                 mock_llm = Mock()
                 mock_llm_class.return_value = mock_llm
-                
+
                 service = MetadataService()
                 service.llm = mock_llm
                 return service
@@ -351,7 +347,7 @@ class TestLLMIntegration:
                 {"dataset_type": "gebaeude", "feature_count": 1000, "quality_score": "85%"}
             ],
         }
-        
+
         # Mock LLM response
         mock_response = Mock()
         mock_response.content = """QUALITÄT: Die Datenqualität ist hoch mit guter räumlicher Abdeckung.
@@ -359,11 +355,11 @@ EMPFEHLUNGEN:
 1. Verwenden Sie die Gebäudedaten für Stadtplanungsanalysen
 2. Kombinieren Sie mit Verkehrsdaten für Erreichbarkeitsanalysen
 3. Nutzen Sie die Bezirksgrenze als räumliche Referenz"""
-        
+
         service_with_llm.llm.invoke.return_value = mock_response
-        
+
         enhanced = service_with_llm._enhance_with_llm(context, "de")
-        
+
         assert "quality_assessment" in enhanced
         assert "usage_recommendations" in enhanced
         assert len(enhanced["usage_recommendations"]) == 3
@@ -371,9 +367,9 @@ EMPFEHLUNGEN:
     def test_enhance_with_llm_failure(self, service_with_llm):
         """Test LLM enhancement failure handling."""
         context = {"bezirk": "Pankow"}
-        
+
         service_with_llm.llm.invoke.side_effect = Exception("API error")
-        
+
         # Should not raise exception, return empty dict
         enhanced = service_with_llm._enhance_with_llm(context, "de")
         assert enhanced == {}
@@ -381,7 +377,7 @@ EMPFEHLUNGEN:
     def test_get_llm_prompt_template_german(self, service_with_llm):
         """Test German LLM prompt template generation."""
         template = service_with_llm._get_llm_prompt_template("de")
-        
+
         assert "Geodaten-Analyse" in template
         assert "QUALITÄT:" in template
         assert "EMPFEHLUNGEN:" in template
@@ -389,7 +385,7 @@ EMPFEHLUNGEN:
     def test_get_llm_prompt_template_english(self, service_with_llm):
         """Test English LLM prompt template generation."""
         template = service_with_llm._get_llm_prompt_template("en")
-        
+
         assert "geodata analysis" in template
         assert "QUALITY:" in template
         assert "RECOMMENDATIONS:" in template
@@ -401,9 +397,9 @@ EMPFEHLUNGEN:
 1. Nutzen Sie für Stadtplanung
 2. Kombinieren mit anderen Datensätzen
 3. Beachten Sie die Lizenzbestimmungen"""
-        
+
         parsed = service_with_llm._parse_llm_response(response, "de")
-        
+
         assert "quality_assessment" in parsed
         assert parsed["quality_assessment"]["summary"] == "Die Datenqualität ist sehr hoch."
         assert len(parsed["usage_recommendations"]) == 3
@@ -415,9 +411,9 @@ RECOMMENDATIONS:
 1. Use for urban planning analyses
 2. Combine with transport data
 3. Consider licensing requirements"""
-        
+
         parsed = service_with_llm._parse_llm_response(response, "en")
-        
+
         assert "quality_assessment" in parsed
         assert "excellent" in parsed["quality_assessment"]["summary"]
         assert len(parsed["usage_recommendations"]) == 3
@@ -425,9 +421,9 @@ RECOMMENDATIONS:
     def test_parse_llm_response_malformed(self, service_with_llm):
         """Test parsing of malformed LLM response."""
         response = "This is not a properly formatted response"
-        
+
         parsed = service_with_llm._parse_llm_response(response, "de")
-        
+
         # Should return empty dict for malformed response
         assert parsed == {}
 
@@ -462,17 +458,19 @@ class TestMetadataServiceIntegration:
                 },
             }
         ]
-        
+
         # Mock template loading and rendering
         with patch.object(service.template_env, "get_template") as mock_get_template:
             mock_template = Mock()
-            mock_template.render.return_value = "# Geodaten-Metadatenreport: Charlottenburg-Wilmersdorf\n\nComplete report"
+            mock_template.render.return_value = (
+                "# Geodaten-Metadatenreport: Charlottenburg-Wilmersdorf\n\nComplete report"
+            )
             mock_get_template.return_value = mock_template
-            
+
             report = service.create_metadata_report(
                 datasets, "Charlottenburg-Wilmersdorf", {"language": "de"}
             )
-            
+
             assert "Charlottenburg-Wilmersdorf" in report
             # Verify template was called with correct context
             mock_template.render.assert_called_once()
@@ -499,14 +497,16 @@ class TestMetadataServiceIntegration:
                 },
             }
         ]
-        
+
         with patch.object(service.template_env, "get_template") as mock_get_template:
             mock_template = Mock()
-            mock_template.render.return_value = "# Geodata Metadata Report: Mitte\n\nComplete English report"
+            mock_template.render.return_value = (
+                "# Geodata Metadata Report: Mitte\n\nComplete English report"
+            )
             mock_get_template.return_value = mock_template
-            
+
             report = service.create_metadata_report(datasets, "Mitte", {"language": "en"})
-            
+
             assert "Mitte" in report
             mock_get_template.assert_called_once_with("geodata_report_en.md")
 
@@ -518,11 +518,18 @@ class TestMetadataServiceIntegration:
             {
                 "dataset_type": "gebaeude",
                 "source": "geoportal",
-                "predefined_metadata": {"description": "Test buildings", "update_frequency": "quarterly"},
-                "runtime_stats": {"feature_count": 100, "data_quality_score": 0.9, "coverage_percentage": 95.0},
+                "predefined_metadata": {
+                    "description": "Test buildings",
+                    "update_frequency": "quarterly",
+                },
+                "runtime_stats": {
+                    "feature_count": 100,
+                    "data_quality_score": 0.9,
+                    "coverage_percentage": 95.0,
+                },
             }
         ]
-        
+
         try:
             report = service.create_metadata_report(datasets, "Pankow", {"language": "de"})
             assert "Geodaten-Metadatenreport" in report
@@ -537,11 +544,18 @@ class TestMetadataServiceIntegration:
             {
                 "dataset_type": "oepnv_haltestellen",
                 "source": "osm",
-                "predefined_metadata": {"description": "Transport stops", "update_frequency": "daily"},
-                "runtime_stats": {"feature_count": 50, "data_quality_score": 0.8, "coverage_percentage": 88.0},
+                "predefined_metadata": {
+                    "description": "Transport stops",
+                    "update_frequency": "daily",
+                },
+                "runtime_stats": {
+                    "feature_count": 50,
+                    "data_quality_score": 0.8,
+                    "coverage_percentage": 88.0,
+                },
             }
         ]
-        
+
         try:
             report = service.create_metadata_report(datasets, "Spandau", {"language": "en"})
             assert "Geodata Metadata Report" in report
@@ -570,12 +584,12 @@ class TestErrorHandling:
                 # Missing runtime_stats
             }
         ]
-        
+
         with patch.object(service.template_env, "get_template") as mock_get_template:
             mock_template = Mock()
             mock_template.render.return_value = "Report"
             mock_get_template.return_value = mock_template
-            
+
             # Should not raise exception
             report = service.create_metadata_report(datasets, "Pankow", {})
             assert report == "Report"
@@ -590,12 +604,12 @@ class TestErrorHandling:
                 "runtime_stats": {"feature_count": 100},
             }
         ]
-        
+
         with patch.object(service.template_env, "get_template") as mock_get_template:
             mock_template = Mock()
             mock_template.render.return_value = "Report"
             mock_get_template.return_value = mock_template
-            
+
             report = service.create_metadata_report(datasets, "Pankow", {})
             assert report == "Report"
 
@@ -609,20 +623,27 @@ class TestErrorHandling:
                 "runtime_stats": {},
             }
         ]
-        
+
         processed = service._process_dataset_for_template(datasets[0], "de")
-        
+
         assert processed["display_name"] == "Unknown_Type"
         assert processed["license"] == "Unknown"
 
     def test_template_rendering_exception(self, service):
         """Test handling of template rendering exceptions."""
-        datasets = [{"dataset_type": "test", "source": "test", "predefined_metadata": {}, "runtime_stats": {}}]
-        
+        datasets = [
+            {
+                "dataset_type": "test",
+                "source": "test",
+                "predefined_metadata": {},
+                "runtime_stats": {},
+            }
+        ]
+
         with patch.object(service.template_env, "get_template") as mock_get_template:
             mock_template = Mock()
             mock_template.render.side_effect = Exception("Template error")
             mock_get_template.return_value = mock_template
-            
+
             with pytest.raises(MetadataError, match="Metadata report generation failed"):
                 service.create_metadata_report(datasets, "Pankow", {})

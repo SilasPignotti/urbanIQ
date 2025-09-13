@@ -391,7 +391,9 @@ class MetadataService:
             response = self.llm.invoke(prompt)
 
             # Parse LLM response (simplified - could be enhanced with structured output)
-            content = response.content if isinstance(response.content, str) else str(response.content)
+            content = (
+                response.content if isinstance(response.content, str) else str(response.content)
+            )
             enhanced_data = self._parse_llm_response(content, language)
 
             return enhanced_data
@@ -475,4 +477,3 @@ RECOMMENDATIONS: [Numbered list with 3-4 recommendations]
         if isinstance(value, int):
             return f"{value:,}".replace(",", ".")
         return str(value)
-
