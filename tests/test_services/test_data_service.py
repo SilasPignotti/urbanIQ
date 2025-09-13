@@ -307,11 +307,14 @@ class TestFetchSingleDataset:
         """Test that connector failures are properly propagated."""
         service = DataService()
 
-        with patch.object(
-            service._district_connector,
-            "fetch_district_boundary",
-            side_effect=ServiceUnavailableError("Service down"),
-        ), pytest.raises(ConnectorError, match="Failed to fetch bezirksgrenzen"):
+        with (
+            patch.object(
+                service._district_connector,
+                "fetch_district_boundary",
+                side_effect=ServiceUnavailableError("Service down"),
+            ),
+            pytest.raises(ConnectorError, match="Failed to fetch bezirksgrenzen"),
+        ):
             await service._fetch_single_dataset("Pankow", "bezirksgrenzen")
 
 
@@ -486,22 +489,28 @@ class TestErrorScenarios:
         """Test handling of network timeouts."""
         service = DataService()
 
-        with patch.object(
-            service._district_connector,
-            "fetch_district_boundary",
-            side_effect=TimeoutError("Request timeout"),
-        ), pytest.raises(ConnectorError):
+        with (
+            patch.object(
+                service._district_connector,
+                "fetch_district_boundary",
+                side_effect=TimeoutError("Request timeout"),
+            ),
+            pytest.raises(ConnectorError),
+        ):
             await service._fetch_single_dataset("Pankow", "bezirksgrenzen")
 
     async def test_malformed_response_handling(self):
         """Test handling of malformed API responses."""
         service = DataService()
 
-        with patch.object(
-            service._district_connector,
-            "fetch_district_boundary",
-            side_effect=ValueError("Invalid response format"),
-        ), pytest.raises(ConnectorError):
+        with (
+            patch.object(
+                service._district_connector,
+                "fetch_district_boundary",
+                side_effect=ValueError("Invalid response format"),
+            ),
+            pytest.raises(ConnectorError),
+        ):
             await service._fetch_single_dataset("Pankow", "bezirksgrenzen")
 
     async def test_concurrent_request_handling(self):
