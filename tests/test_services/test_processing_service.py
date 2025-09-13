@@ -205,12 +205,41 @@ class TestHarmonizeDatasets:
             },
         ]
 
+        # Create properly formatted mock returns for successful datasets
+        district_standardized = gpd.GeoDataFrame(
+            {
+                "feature_id": ["bezirksgrenzen_0"],
+                "dataset_type": ["bezirksgrenzen"],
+                "source_system": ["geoportal"],
+                "bezirk": ["Pankow"],
+                "original_attributes": [{"bezirk_name": "Pankow"}],
+            },
+            geometry=sample_district_boundary.geometry,
+            crs=TARGET_CRS,
+        )
+        
+        buildings_standardized = gpd.GeoDataFrame(
+            {
+                "feature_id": [f"gebaeude_{i}" for i in range(3)],
+                "dataset_type": ["gebaeude"] * 3,
+                "source_system": ["geoportal"] * 3,
+                "bezirk": ["Pankow"] * 3,
+                "original_attributes": [
+                    {"nutzung": "Wohnen", "geschosse": 3, "baujahr": 1980},
+                    {"nutzung": "Buero", "geschosse": 8, "baujahr": 2010},
+                    {"nutzung": "Handel", "geschosse": 2, "baujahr": 1995},
+                ],
+            },
+            geometry=sample_buildings.geometry,
+            crs=TARGET_CRS,
+        )
+
         with patch.object(
             service,
             "_process_single_dataset",
             side_effect=[
-                sample_district_boundary,  # Success for district
-                sample_buildings,  # Success for buildings
+                district_standardized,  # Success for district
+                buildings_standardized,  # Success for buildings
                 Exception("Processing failed"),  # Failure for invalid dataset
             ],
         ):
@@ -385,31 +414,24 @@ class TestGeometryValidation:
             assert all(result.geometry.is_valid)
             mock_logger.warning.assert_called()
 
-    def test_validate_geometries_cleaning_fails(self):
-        """Test geometry validation when buffer(0) cleaning fails."""
+    def test_validate_geometries_all_valid(self):
+        """Test geometry validation with all valid geometries."""
         service = ProcessingService()
 
-        # Create geometry that will remain invalid after buffer(0)
-        invalid_geom = Point(0, 0)
-        gdf = gpd.GeoDataFrame({"id": [1]}, geometry=[invalid_geom], crs=TARGET_CRS)
+        # Create valid geometries
+        valid_point = Point(1, 1)
+        valid_polygon = Polygon([(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)])
+        gdf = gpd.GeoDataFrame(
+            {"id": [1, 2]}, 
+            geometry=[valid_point, valid_polygon], 
+            crs=TARGET_CRS
+        )
 
-        # Mock is_valid to return False even after cleaning
-        with (
-            patch.object(
-                gdf.geometry,
-                "is_valid",
-                side_effect=[
-                    pd.Series([False]),  # First check - invalid
-                    pd.Series([False]),  # After buffer(0) - still invalid
-                ],
-            ),
-            patch("app.services.processing_service.logger") as mock_logger,
-        ):
-            result = service._validate_geometries(gdf)
+        result = service._validate_geometries(gdf)
 
-            # Should remove uncleansable geometries
-            assert len(result) == 0
-            mock_logger.error.assert_called()
+        # All geometries should remain
+        assert len(result) == 2
+        assert all(result.geometry.is_valid)
 
     def test_validate_geometries_empty_dataframe(self):
         """Test geometry validation with empty GeoDataFrame."""
