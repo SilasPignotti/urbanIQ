@@ -136,7 +136,14 @@ class NLPService:
         """Initialize NLP service with Google GenAI client."""
         self.confidence_threshold = 0.7
 
-        if not settings.google_api_key:
+        # Handle both SecretStr and string types (for testing compatibility)
+        api_key_value = None
+        if hasattr(settings.google_api_key, "get_secret_value"):
+            api_key_value = settings.google_api_key.get_secret_value()
+        else:
+            api_key_value = settings.google_api_key
+
+        if not api_key_value:
             raise ValueError(
                 "Google API key not configured. Set GOOGLE_API_KEY environment variable."
             )
@@ -144,7 +151,9 @@ class NLPService:
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-1.5-pro",
             temperature=0.1,  # Low temperature for deterministic parsing
-            google_api_key=SecretStr(settings.google_api_key),
+            google_api_key=settings.google_api_key
+            if hasattr(settings.google_api_key, "get_secret_value")
+            else SecretStr(settings.google_api_key),
         )
 
         # Create parser for structured output
