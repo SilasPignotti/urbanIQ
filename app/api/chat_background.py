@@ -104,9 +104,7 @@ async def _async_process_geodata_request(
                     raise ValueError("District boundary not found in datasets")
 
                 # Execute harmonization for data processing (result not used in current implementation)
-                await processing_service.harmonize_datasets(
-                    datasets, boundary_dataset["geodata"]
-                )
+                await processing_service.harmonize_datasets(datasets, boundary_dataset["geodata"])
 
                 job.progress = 55
                 session.add(job)

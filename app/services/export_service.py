@@ -181,9 +181,7 @@ class ExportService:
             geodata = dataset.get("geodata")
 
             if geodata is None or geodata.empty:
-                logger_instance.warning(
-                    "Skipping empty dataset", dataset_type=dataset_type
-                )
+                logger_instance.warning("Skipping empty dataset", dataset_type=dataset_type)
                 continue
 
             # Export in GeoJSON format (primary)
@@ -279,34 +277,38 @@ class ExportService:
             dataset_type = dataset.get("dataset_type", "unknown")
             dataset_name = self._get_dataset_display_name(dataset_type)
 
-            readme_lines.extend([
-                f"### {dataset_name}",
-                f"- `{dataset_type}.geojson` - GeoJSON Format für Web-Anwendungen",
-                f"- `{dataset_type}.shp` + Begleitdateien - Shapefile für GIS-Software",
-                "",
-            ])
+            readme_lines.extend(
+                [
+                    f"### {dataset_name}",
+                    f"- `{dataset_type}.geojson` - GeoJSON Format für Web-Anwendungen",
+                    f"- `{dataset_type}.shp` + Begleitdateien - Shapefile für GIS-Software",
+                    "",
+                ]
+            )
 
-        readme_lines.extend([
-            "## Dokumentation",
-            "",
-            "- `METADATA.md` - Detaillierte Metadaten und Qualitätsbewertung",
-            "- `LICENSE_*.txt` - Lizenzinformationen für Datenquellen",
-            "",
-            "## Koordinatensystem",
-            "",
-            "Alle Geodaten sind im Koordinatensystem ETRS89/UTM Zone 33N (EPSG:25833) projiziert.",
-            "Für die Verwendung in Web-Anwendungen kann eine Transformation nach WGS84 (EPSG:4326) erforderlich sein.",
-            "",
-            "## Empfohlene GIS-Software",
-            "",
-            "- **QGIS** (kostenlos): Unterstützt GeoJSON und Shapefile direkt",
-            "- **ArcGIS**: Verwenden Sie die Shapefile-Dateien",
-            "- **Web-Anwendungen**: Verwenden Sie die GeoJSON-Dateien",
-            "",
-            "## Support",
-            "",
-            "Bei Fragen zur Datennutzung konsultieren Sie die METADATA.md Datei.",
-        ])
+        readme_lines.extend(
+            [
+                "## Dokumentation",
+                "",
+                "- `METADATA.md` - Detaillierte Metadaten und Qualitätsbewertung",
+                "- `LICENSE_*.txt` - Lizenzinformationen für Datenquellen",
+                "",
+                "## Koordinatensystem",
+                "",
+                "Alle Geodaten sind im Koordinatensystem ETRS89/UTM Zone 33N (EPSG:25833) projiziert.",
+                "Für die Verwendung in Web-Anwendungen kann eine Transformation nach WGS84 (EPSG:4326) erforderlich sein.",
+                "",
+                "## Empfohlene GIS-Software",
+                "",
+                "- **QGIS** (kostenlos): Unterstützt GeoJSON und Shapefile direkt",
+                "- **ArcGIS**: Verwenden Sie die Shapefile-Dateien",
+                "- **Web-Anwendungen**: Verwenden Sie die GeoJSON-Dateien",
+                "",
+                "## Support",
+                "",
+                "Bei Fragen zur Datennutzung konsultieren Sie die METADATA.md Datei.",
+            ]
+        )
 
         return "\n".join(readme_lines)
 
@@ -378,12 +380,16 @@ class ExportService:
             for zip_file in zip_files:
                 try:
                     # Check if file is older than 24 hours (package expiration default)
-                    file_age_hours = (datetime.utcnow().timestamp() - zip_file.stat().st_mtime) / 3600
+                    file_age_hours = (
+                        datetime.utcnow().timestamp() - zip_file.stat().st_mtime
+                    ) / 3600
 
                     if file_age_hours > 24:
                         zip_file.unlink()
                         cleaned_count += 1
-                        logger.info("Expired package cleaned", file=zip_file.name, age_hours=file_age_hours)
+                        logger.info(
+                            "Expired package cleaned", file=zip_file.name, age_hours=file_age_hours
+                        )
 
                 except Exception as e:
                     logger.warning("Failed to clean package", file=zip_file.name, error=str(e))

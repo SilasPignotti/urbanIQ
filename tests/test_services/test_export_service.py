@@ -59,16 +59,19 @@ class TestCreateGeodataPackage:
     def mock_datasets(self):
         """Create mock dataset dictionaries for testing."""
         # Create mock GeoDataFrames
-        boundary_gdf = gpd.GeoDataFrame({
-            'name': ['Pankow'],
-            'geometry': [Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])]
-        }, crs="EPSG:25833")
+        boundary_gdf = gpd.GeoDataFrame(
+            {"name": ["Pankow"], "geometry": [Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])]},
+            crs="EPSG:25833",
+        )
 
-        buildings_gdf = gpd.GeoDataFrame({
-            'id': [1, 2],
-            'type': ['residential', 'commercial'],
-            'geometry': [Point(0.3, 0.3), Point(0.7, 0.7)]
-        }, crs="EPSG:25833")
+        buildings_gdf = gpd.GeoDataFrame(
+            {
+                "id": [1, 2],
+                "type": ["residential", "commercial"],
+                "geometry": [Point(0.3, 0.3), Point(0.7, 0.7)],
+            },
+            crs="EPSG:25833",
+        )
 
         return [
             {
@@ -122,7 +125,7 @@ Sehr hoch (0.95) - Vollständige Abdeckung des Bezirks.
                     datasets=mock_datasets,
                     metadata_report=mock_metadata_report,
                     bezirk="Pankow",
-                    job_id="test-job-123"
+                    job_id="test-job-123",
                 )
 
                 # Verify package creation
@@ -149,7 +152,7 @@ Sehr hoch (0.95) - Vollständige Abdeckung des Bezirks.
                     datasets=[],
                     metadata_report=mock_metadata_report,
                     bezirk="Pankow",
-                    job_id="test-job-empty"
+                    job_id="test-job-empty",
                 )
 
                 # Should still create package with documentation only
@@ -157,7 +160,7 @@ Sehr hoch (0.95) - Vollständige Abdeckung des Bezirks.
                 assert package.file_size > 0
 
                 # Verify ZIP contains documentation files
-                with zipfile.ZipFile(package.file_path, 'r') as zip_file:
+                with zipfile.ZipFile(package.file_path, "r") as zip_file:
                     file_list = zip_file.namelist()
                     assert "README.md" in file_list
                     assert "METADATA.md" in file_list
@@ -177,7 +180,7 @@ Sehr hoch (0.95) - Vollständige Abdeckung des Bezirks.
                         datasets=mock_datasets,
                         metadata_report=mock_metadata_report,
                         bezirk="Charlottenburg-Wilmersdorf",
-                        job_id="test-job-filename"
+                        job_id="test-job-filename",
                     )
 
                     filename = Path(package.file_path).name
@@ -192,11 +195,14 @@ class TestGeodataExport:
     @pytest.fixture
     def sample_geodataframe(self):
         """Create sample GeoDataFrame for testing."""
-        return gpd.GeoDataFrame({
-            'id': [1, 2, 3],
-            'name': ['Feature A', 'Feature B', 'Feature C'],
-            'geometry': [Point(0, 0), Point(1, 1), Point(2, 2)]
-        }, crs="EPSG:25833")
+        return gpd.GeoDataFrame(
+            {
+                "id": [1, 2, 3],
+                "name": ["Feature A", "Feature B", "Feature C"],
+                "geometry": [Point(0, 0), Point(1, 1), Point(2, 2)],
+            },
+            crs="EPSG:25833",
+        )
 
     def test_export_geodata_files(self, sample_geodataframe):
         """Test geodata export in multiple formats."""
@@ -209,10 +215,12 @@ class TestGeodataExport:
                 service = ExportService()
                 mock_logger = MagicMock()
 
-                datasets = [{
-                    "dataset_type": "test_data",
-                    "geodata": sample_geodataframe,
-                }]
+                datasets = [
+                    {
+                        "dataset_type": "test_data",
+                        "geodata": sample_geodataframe,
+                    }
+                ]
 
                 service._export_geodata_files(datasets, temp_path, mock_logger)
 
@@ -246,7 +254,7 @@ class TestGeodataExport:
                 # Verify file can be read back
                 reloaded_gdf = gpd.read_file(output_file)
                 assert len(reloaded_gdf) == 3
-                assert list(reloaded_gdf.columns) == ['id', 'name', 'geometry']
+                assert list(reloaded_gdf.columns) == ["id", "name", "geometry"]
 
     def test_export_geodata_format_shapefile(self, sample_geodataframe):
         """Test specific Shapefile format export."""
@@ -272,7 +280,7 @@ class TestGeodataExport:
 
     def test_export_empty_geodataframe(self):
         """Test handling of empty GeoDataFrame."""
-        empty_gdf = gpd.GeoDataFrame(columns=['geometry'], crs="EPSG:25833")
+        empty_gdf = gpd.GeoDataFrame(columns=["geometry"], crs="EPSG:25833")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -283,10 +291,12 @@ class TestGeodataExport:
                 service = ExportService()
                 mock_logger = MagicMock()
 
-                datasets = [{
-                    "dataset_type": "empty_data",
-                    "geodata": empty_gdf,
-                }]
+                datasets = [
+                    {
+                        "dataset_type": "empty_data",
+                        "geodata": empty_gdf,
+                    }
+                ]
 
                 # Should handle empty datasets gracefully
                 service._export_geodata_files(datasets, temp_path, mock_logger)
@@ -308,11 +318,14 @@ class TestGeodataExport:
                 mock_logger = MagicMock()
 
                 # Mock to_file to raise an exception
-                with patch.object(sample_geodataframe, 'to_file', side_effect=Exception("Export failed")):
-                    with pytest.raises(FileFormatError, match="Failed to export test_data as geojson"):
-                        service._export_geodata_format(
-                            sample_geodataframe, "test_data", "geojson", temp_path, mock_logger
-                        )
+                with patch.object(
+                    sample_geodataframe, "to_file", side_effect=Exception("Export failed")
+                ), pytest.raises(
+                    FileFormatError, match="Failed to export test_data as geojson"
+                ):
+                    service._export_geodata_format(
+                        sample_geodataframe, "test_data", "geojson", temp_path, mock_logger
+                    )
 
 
 class TestDocumentationCreation:
@@ -467,7 +480,7 @@ class TestZipPackageCreation:
                 assert output_zip.exists()
 
                 # Verify ZIP contents
-                with zipfile.ZipFile(output_zip, 'r') as zip_file:
+                with zipfile.ZipFile(output_zip, "r") as zip_file:
                     file_list = zip_file.namelist()
                     assert "test1.txt" in file_list
                     assert "test2.geojson" in file_list
@@ -508,6 +521,7 @@ class TestPackageCleanup:
             old_zip.write_text("old content")
             # Use os.utime to set file modification time
             import os
+
             old_time = (datetime.now() - timedelta(hours=48)).timestamp()
             os.utime(old_zip, (old_time, old_time))
 
@@ -531,8 +545,8 @@ class TestPackageCleanup:
                 # Verify cleanup results
                 assert cleaned_count == 1
                 assert not old_zip.exists()  # Old ZIP removed
-                assert new_zip.exists()      # New ZIP kept
-                assert other_file.exists()   # Non-ZIP ignored
+                assert new_zip.exists()  # New ZIP kept
+                assert other_file.exists()  # Non-ZIP ignored
 
     def test_cleanup_no_expired_packages(self):
         """Test cleanup when no packages are expired."""
@@ -563,6 +577,7 @@ class TestPackageCleanup:
             old_zip = export_dir / "old_package.zip"
             old_zip.write_text("content")
             import os
+
             old_time = (datetime.now() - timedelta(hours=48)).timestamp()
             os.utime(old_zip, (old_time, old_time))
 
@@ -572,7 +587,7 @@ class TestPackageCleanup:
                 service = ExportService()
 
                 # Mock unlink to raise exception
-                with patch.object(Path, 'unlink', side_effect=OSError("Permission denied")):
+                with patch.object(Path, "unlink", side_effect=OSError("Permission denied")):
                     # Should handle individual file errors gracefully
                     cleaned_count = service.cleanup_expired_packages()
 
@@ -588,7 +603,7 @@ class TestPackageCleanup:
                 service = ExportService()
 
                 # Mock glob to raise exception
-                with patch.object(Path, 'glob', side_effect=OSError("Directory access failed")):
+                with patch.object(Path, "glob", side_effect=OSError("Directory access failed")):
                     # Should raise ExportError for directory access issues
                     with pytest.raises(ExportError, match="Cleanup operation failed"):
                         service.cleanup_expired_packages()
@@ -597,22 +612,25 @@ class TestPackageCleanup:
 class TestErrorHandling:
     """Test error handling scenarios."""
 
-    def test_package_generation_error_handling(self, mock_datasets=[]):
+    def test_package_generation_error_handling(self, mock_datasets=None):
         """Test PackageGenerationError in main method."""
+        if mock_datasets is None:
+            mock_datasets = []
         with patch("app.services.export_service.settings") as mock_settings:
             mock_settings.export_dir = "/tmp/test"
 
             service = ExportService()
 
             # Mock _export_geodata_files to raise exception
-            with patch.object(service, '_export_geodata_files', side_effect=Exception("Export failed")):
-                with pytest.raises(PackageGenerationError, match="Failed to create package"):
-                    service.create_geodata_package(
-                        datasets=[],
-                        metadata_report="Test report",
-                        bezirk="Pankow",
-                        job_id="test-job"
-                    )
+            with patch.object(
+                service, "_export_geodata_files", side_effect=Exception("Export failed")
+            ), pytest.raises(PackageGenerationError, match="Failed to create package"):
+                service.create_geodata_package(
+                    datasets=[],
+                    metadata_report="Test report",
+                    bezirk="Pankow",
+                    job_id="test-job",
+                )
 
     def test_file_format_error_inheritance(self):
         """Test FileFormatError inherits from ExportError."""
@@ -634,17 +652,23 @@ class TestExportServiceIntegration:
     def test_full_package_creation_workflow(self):
         """Test complete package creation workflow."""
         # Create realistic test datasets
-        boundary_gdf = gpd.GeoDataFrame({
-            'bezirk_name': ['Pankow'],
-            'flaeche_ha': [10325],
-            'geometry': [Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])]
-        }, crs="EPSG:25833")
+        boundary_gdf = gpd.GeoDataFrame(
+            {
+                "bezirk_name": ["Pankow"],
+                "flaeche_ha": [10325],
+                "geometry": [Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])],
+            },
+            crs="EPSG:25833",
+        )
 
-        buildings_gdf = gpd.GeoDataFrame({
-            'nutzung': ['Wohnen', 'Gewerbe'],
-            'geschosse': [3, 5],
-            'geometry': [Point(3, 3), Point(7, 7)]
-        }, crs="EPSG:25833")
+        buildings_gdf = gpd.GeoDataFrame(
+            {
+                "nutzung": ["Wohnen", "Gewerbe"],
+                "geschosse": [3, 5],
+                "geometry": [Point(3, 3), Point(7, 7)],
+            },
+            crs="EPSG:25833",
+        )
 
         datasets = [
             {
@@ -682,7 +706,7 @@ Vollständige Geodaten für den Bezirk Pankow.
                     datasets=datasets,
                     metadata_report=metadata_report,
                     bezirk="Pankow",
-                    job_id="integration-test-job"
+                    job_id="integration-test-job",
                 )
 
                 # Comprehensive validation
@@ -692,7 +716,7 @@ Vollständige Geodaten für den Bezirk Pankow.
                 assert package.file_size > 1000  # Should be substantial
 
                 # Validate ZIP contents
-                with zipfile.ZipFile(package.file_path, 'r') as zip_file:
+                with zipfile.ZipFile(package.file_path, "r") as zip_file:
                     file_list = zip_file.namelist()
 
                     # Check for geodata files
