@@ -115,8 +115,9 @@ Sehr hoch (0.95) - Vollständige Abdeckung des Bezirks.
 
     def test_create_geodata_package_success(self, mock_datasets, mock_metadata_report):
         """Test successful geodata package creation."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            with patch("app.services.export_service.settings") as mock_settings:
+        with tempfile.TemporaryDirectory() as temp_dir, patch(
+            "app.services.export_service.settings"
+        ) as mock_settings:
                 mock_settings.export_dir = temp_dir
 
                 service = ExportService()
@@ -142,8 +143,9 @@ Sehr hoch (0.95) - Vollständige Abdeckung des Bezirks.
 
     def test_create_geodata_package_with_empty_datasets(self, mock_metadata_report):
         """Test package creation with empty datasets list."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            with patch("app.services.export_service.settings") as mock_settings:
+        with tempfile.TemporaryDirectory() as temp_dir, patch(
+            "app.services.export_service.settings"
+        ) as mock_settings:
                 mock_settings.export_dir = temp_dir
 
                 service = ExportService()
@@ -167,8 +169,9 @@ Sehr hoch (0.95) - Vollständige Abdeckung des Bezirks.
 
     def test_package_filename_generation(self, mock_datasets, mock_metadata_report):
         """Test package filename includes district and timestamp."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            with patch("app.services.export_service.settings") as mock_settings:
+        with tempfile.TemporaryDirectory() as temp_dir, patch(
+            "app.services.export_service.settings"
+        ) as mock_settings:
                 mock_settings.export_dir = temp_dir
 
                 service = ExportService()
@@ -318,10 +321,11 @@ class TestGeodataExport:
                 mock_logger = MagicMock()
 
                 # Mock to_file to raise an exception
-                with patch.object(
-                    sample_geodataframe, "to_file", side_effect=Exception("Export failed")
-                ), pytest.raises(
-                    FileFormatError, match="Failed to export test_data as geojson"
+                with (
+                    patch.object(
+                        sample_geodataframe, "to_file", side_effect=Exception("Export failed")
+                    ),
+                    pytest.raises(FileFormatError, match="Failed to export test_data as geojson"),
                 ):
                     service._export_geodata_format(
                         sample_geodataframe, "test_data", "geojson", temp_path, mock_logger
@@ -596,16 +600,17 @@ class TestPackageCleanup:
 
     def test_cleanup_directory_error(self):
         """Test cleanup when directory operations fail."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            with patch("app.services.export_service.settings") as mock_settings:
+        with tempfile.TemporaryDirectory() as temp_dir, patch(
+            "app.services.export_service.settings"
+        ) as mock_settings:
                 mock_settings.export_dir = str(temp_dir)
 
                 service = ExportService()
 
                 # Mock glob to raise exception
-                with patch.object(Path, "glob", side_effect=OSError("Directory access failed")):
-                    # Should raise ExportError for directory access issues
-                    with pytest.raises(ExportError, match="Cleanup operation failed"):
+                with patch.object(
+                    Path, "glob", side_effect=OSError("Directory access failed")
+                ), pytest.raises(ExportError, match="Cleanup operation failed"):
                         service.cleanup_expired_packages()
 
 
@@ -622,9 +627,12 @@ class TestErrorHandling:
             service = ExportService()
 
             # Mock _export_geodata_files to raise exception
-            with patch.object(
-                service, "_export_geodata_files", side_effect=Exception("Export failed")
-            ), pytest.raises(PackageGenerationError, match="Failed to create package"):
+            with (
+                patch.object(
+                    service, "_export_geodata_files", side_effect=Exception("Export failed")
+                ),
+                pytest.raises(PackageGenerationError, match="Failed to create package"),
+            ):
                 service.create_geodata_package(
                     datasets=[],
                     metadata_report="Test report",
@@ -696,8 +704,9 @@ class TestExportServiceIntegration:
 Vollständige Geodaten für den Bezirk Pankow.
 """
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            with patch("app.services.export_service.settings") as mock_settings:
+        with tempfile.TemporaryDirectory() as temp_dir, patch(
+            "app.services.export_service.settings"
+        ) as mock_settings:
                 mock_settings.export_dir = temp_dir
 
                 service = ExportService()
