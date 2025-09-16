@@ -137,11 +137,11 @@ class NLPService:
         self.confidence_threshold = 0.7
 
         # Handle both SecretStr and string types (for testing compatibility)
-        api_key_value = None
+        api_key_value: str | None = None
         if hasattr(settings.google_api_key, "get_secret_value"):
             api_key_value = settings.google_api_key.get_secret_value()
         else:
-            api_key_value = settings.google_api_key
+            api_key_value = str(settings.google_api_key) if settings.google_api_key else None
 
         if not api_key_value:
             raise ValueError(
@@ -153,7 +153,7 @@ class NLPService:
             temperature=0.1,  # Low temperature for deterministic parsing
             google_api_key=settings.google_api_key
             if hasattr(settings.google_api_key, "get_secret_value")
-            else SecretStr(settings.google_api_key),
+            else SecretStr(str(settings.google_api_key)),
         )
 
         # Create parser for structured output

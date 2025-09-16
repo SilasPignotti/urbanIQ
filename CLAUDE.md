@@ -198,11 +198,20 @@ uv python install 3.12
 ### Development Commands
 
 ```bash
+# Setup environment with real API keys (run once per branch)
+./scripts/setup-env.sh
+
 # Run all tests
 uv run pytest
 
 # Run specific tests with verbose output
 uv run pytest tests/test_module.py -v
+
+# Run tests excluding external API calls
+uv run pytest -m "not external"
+
+# Run external API tests (requires real API key)
+uv run pytest tests/test_services/test_nlp_service.py::TestNLPServiceRealAPI -v
 
 # Run tests with coverage
 uv run pytest --cov=src --cov-report=html
@@ -222,6 +231,16 @@ uv run mypy src/
 # Run pre-commit hooks
 uv run pre-commit run --all-files
 ```
+
+### API Key Setup
+
+The project requires a Google Gemini API key for LLM services. The key is stored as a GitHub secret and needs to be configured locally:
+
+1. **For new branches**: Run `./scripts/setup-env.sh` to fetch the API key from GitHub secrets
+2. **GitHub CI**: Uses the `GOOGLE_API_KEY` secret automatically
+3. **Local testing**: The setup script updates your `.env` file with the real key
+
+**Note**: The `.env` file is not committed to git, so you'll need to run the setup script each time you start a new branch.
 
 ## 📋 Style & Conventions
 

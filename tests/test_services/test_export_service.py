@@ -115,81 +115,84 @@ Sehr hoch (0.95) - Vollständige Abdeckung des Bezirks.
 
     def test_create_geodata_package_success(self, mock_datasets, mock_metadata_report):
         """Test successful geodata package creation."""
-        with tempfile.TemporaryDirectory() as temp_dir, patch(
-            "app.services.export_service.settings"
-        ) as mock_settings:
-                mock_settings.export_dir = temp_dir
+        with (
+            tempfile.TemporaryDirectory() as temp_dir,
+            patch("app.services.export_service.settings") as mock_settings,
+        ):
+            mock_settings.export_dir = temp_dir
 
-                service = ExportService()
+            service = ExportService()
+
+            package = service.create_geodata_package(
+                datasets=mock_datasets,
+                metadata_report=mock_metadata_report,
+                bezirk="Pankow",
+                job_id="test-job-123",
+            )
+
+            # Verify package creation
+            assert isinstance(package, Package)
+            assert package.job_id == "test-job-123"
+            assert package.file_path.endswith(".zip")
+            assert package.file_size > 0
+            assert package.metadata_report == mock_metadata_report
+
+            # Verify ZIP file exists
+            zip_path = Path(package.file_path)
+            assert zip_path.exists()
+            assert zip_path.suffix == ".zip"
+
+    def test_create_geodata_package_with_empty_datasets(self, mock_metadata_report):
+        """Test package creation with empty datasets list."""
+        with (
+            tempfile.TemporaryDirectory() as temp_dir,
+            patch("app.services.export_service.settings") as mock_settings,
+        ):
+            mock_settings.export_dir = temp_dir
+
+            service = ExportService()
+
+            package = service.create_geodata_package(
+                datasets=[],
+                metadata_report=mock_metadata_report,
+                bezirk="Pankow",
+                job_id="test-job-empty",
+            )
+
+            # Should still create package with documentation only
+            assert isinstance(package, Package)
+            assert package.file_size > 0
+
+            # Verify ZIP contains documentation files
+            with zipfile.ZipFile(package.file_path, "r") as zip_file:
+                file_list = zip_file.namelist()
+                assert "README.md" in file_list
+                assert "METADATA.md" in file_list
+
+    def test_package_filename_generation(self, mock_datasets, mock_metadata_report):
+        """Test package filename includes district and timestamp."""
+        with (
+            tempfile.TemporaryDirectory() as temp_dir,
+            patch("app.services.export_service.settings") as mock_settings,
+        ):
+            mock_settings.export_dir = temp_dir
+
+            service = ExportService()
+
+            with patch("app.services.export_service.datetime") as mock_datetime:
+                mock_datetime.utcnow.return_value.strftime.return_value = "20250916_143000"
 
                 package = service.create_geodata_package(
                     datasets=mock_datasets,
                     metadata_report=mock_metadata_report,
-                    bezirk="Pankow",
-                    job_id="test-job-123",
+                    bezirk="Charlottenburg-Wilmersdorf",
+                    job_id="test-job-filename",
                 )
 
-                # Verify package creation
-                assert isinstance(package, Package)
-                assert package.job_id == "test-job-123"
-                assert package.file_path.endswith(".zip")
-                assert package.file_size > 0
-                assert package.metadata_report == mock_metadata_report
-
-                # Verify ZIP file exists
-                zip_path = Path(package.file_path)
-                assert zip_path.exists()
-                assert zip_path.suffix == ".zip"
-
-    def test_create_geodata_package_with_empty_datasets(self, mock_metadata_report):
-        """Test package creation with empty datasets list."""
-        with tempfile.TemporaryDirectory() as temp_dir, patch(
-            "app.services.export_service.settings"
-        ) as mock_settings:
-                mock_settings.export_dir = temp_dir
-
-                service = ExportService()
-
-                package = service.create_geodata_package(
-                    datasets=[],
-                    metadata_report=mock_metadata_report,
-                    bezirk="Pankow",
-                    job_id="test-job-empty",
-                )
-
-                # Should still create package with documentation only
-                assert isinstance(package, Package)
-                assert package.file_size > 0
-
-                # Verify ZIP contains documentation files
-                with zipfile.ZipFile(package.file_path, "r") as zip_file:
-                    file_list = zip_file.namelist()
-                    assert "README.md" in file_list
-                    assert "METADATA.md" in file_list
-
-    def test_package_filename_generation(self, mock_datasets, mock_metadata_report):
-        """Test package filename includes district and timestamp."""
-        with tempfile.TemporaryDirectory() as temp_dir, patch(
-            "app.services.export_service.settings"
-        ) as mock_settings:
-                mock_settings.export_dir = temp_dir
-
-                service = ExportService()
-
-                with patch("app.services.export_service.datetime") as mock_datetime:
-                    mock_datetime.utcnow.return_value.strftime.return_value = "20250916_143000"
-
-                    package = service.create_geodata_package(
-                        datasets=mock_datasets,
-                        metadata_report=mock_metadata_report,
-                        bezirk="Charlottenburg-Wilmersdorf",
-                        job_id="test-job-filename",
-                    )
-
-                    filename = Path(package.file_path).name
-                    assert "charlottenburg-wilmersdorf" in filename.lower()
-                    assert "20250916_143000" in filename
-                    assert filename.endswith(".zip")
+                filename = Path(package.file_path).name
+                assert "charlottenburg-wilmersdorf" in filename.lower()
+                assert "20250916_143000" in filename
+                assert filename.endswith(".zip")
 
 
 class TestGeodataExport:
@@ -600,18 +603,20 @@ class TestPackageCleanup:
 
     def test_cleanup_directory_error(self):
         """Test cleanup when directory operations fail."""
-        with tempfile.TemporaryDirectory() as temp_dir, patch(
-            "app.services.export_service.settings"
-        ) as mock_settings:
-                mock_settings.export_dir = str(temp_dir)
+        with (
+            tempfile.TemporaryDirectory() as temp_dir,
+            patch("app.services.export_service.settings") as mock_settings,
+        ):
+            mock_settings.export_dir = str(temp_dir)
 
-                service = ExportService()
+            service = ExportService()
 
-                # Mock glob to raise exception
-                with patch.object(
-                    Path, "glob", side_effect=OSError("Directory access failed")
-                ), pytest.raises(ExportError, match="Cleanup operation failed"):
-                        service.cleanup_expired_packages()
+            # Mock glob to raise exception
+            with (
+                patch.object(Path, "glob", side_effect=OSError("Directory access failed")),
+                pytest.raises(ExportError, match="Cleanup operation failed"),
+            ):
+                service.cleanup_expired_packages()
 
 
 class TestErrorHandling:
@@ -704,46 +709,47 @@ class TestExportServiceIntegration:
 Vollständige Geodaten für den Bezirk Pankow.
 """
 
-        with tempfile.TemporaryDirectory() as temp_dir, patch(
-            "app.services.export_service.settings"
-        ) as mock_settings:
-                mock_settings.export_dir = temp_dir
+        with (
+            tempfile.TemporaryDirectory() as temp_dir,
+            patch("app.services.export_service.settings") as mock_settings,
+        ):
+            mock_settings.export_dir = temp_dir
 
-                service = ExportService()
+            service = ExportService()
 
-                package = service.create_geodata_package(
-                    datasets=datasets,
-                    metadata_report=metadata_report,
-                    bezirk="Pankow",
-                    job_id="integration-test-job",
-                )
+            package = service.create_geodata_package(
+                datasets=datasets,
+                metadata_report=metadata_report,
+                bezirk="Pankow",
+                job_id="integration-test-job",
+            )
 
-                # Comprehensive validation
-                assert isinstance(package, Package)
-                assert package.job_id == "integration-test-job"
-                assert Path(package.file_path).exists()
-                assert package.file_size > 1000  # Should be substantial
+            # Comprehensive validation
+            assert isinstance(package, Package)
+            assert package.job_id == "integration-test-job"
+            assert Path(package.file_path).exists()
+            assert package.file_size > 1000  # Should be substantial
 
-                # Validate ZIP contents
-                with zipfile.ZipFile(package.file_path, "r") as zip_file:
-                    file_list = zip_file.namelist()
+            # Validate ZIP contents
+            with zipfile.ZipFile(package.file_path, "r") as zip_file:
+                file_list = zip_file.namelist()
 
-                    # Check for geodata files
-                    assert "bezirksgrenzen.geojson" in file_list
-                    assert "bezirksgrenzen.shp" in file_list
-                    assert "gebaeude.geojson" in file_list
-                    assert "gebaeude.shp" in file_list
+                # Check for geodata files
+                assert "bezirksgrenzen.geojson" in file_list
+                assert "bezirksgrenzen.shp" in file_list
+                assert "gebaeude.geojson" in file_list
+                assert "gebaeude.shp" in file_list
 
-                    # Check for documentation
-                    assert "README.md" in file_list
-                    assert "METADATA.md" in file_list
-                    assert "LICENSE_GEOPORTAL.txt" in file_list
+                # Check for documentation
+                assert "README.md" in file_list
+                assert "METADATA.md" in file_list
+                assert "LICENSE_GEOPORTAL.txt" in file_list
 
-                    # Validate metadata content
-                    metadata_content = zip_file.read("METADATA.md").decode()
-                    assert "Pankow" in metadata_content
+                # Validate metadata content
+                metadata_content = zip_file.read("METADATA.md").decode()
+                assert "Pankow" in metadata_content
 
-                    # Validate README content
-                    readme_content = zip_file.read("README.md").decode()
-                    assert "Geodatenpaket Pankow" in readme_content
-                    assert "EPSG:25833" in readme_content
+                # Validate README content
+                readme_content = zip_file.read("README.md").decode()
+                assert "Geodatenpaket Pankow" in readme_content
+                assert "EPSG:25833" in readme_content

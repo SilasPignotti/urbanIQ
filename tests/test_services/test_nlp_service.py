@@ -399,8 +399,10 @@ class TestNLPServiceRealAPI:
     """
 
     @pytest.mark.skipif(
-        not settings.google_api_key or os.getenv("CI") == "true",
-        reason="No Google API key configured or running in CI",
+        not settings.google_api_key.get_secret_value()
+        or settings.google_api_key.get_secret_value() == "your-gemini-api-key-here"
+        or os.getenv("CI") == "true",
+        reason="No valid Google API key configured or running in CI",
     )
     def test_real_api_german_parsing(self):
         """Test real API parsing with German geodata requests."""
@@ -438,8 +440,10 @@ class TestNLPServiceRealAPI:
             assert result.is_confident, f"Not confident for: {case['input']}"
 
     @pytest.mark.skipif(
-        not settings.google_api_key or os.getenv("CI") == "true",
-        reason="No Google API key configured or running in CI",
+        not settings.google_api_key.get_secret_value()
+        or settings.google_api_key.get_secret_value() == "your-gemini-api-key-here"
+        or os.getenv("CI") == "true",
+        reason="No valid Google API key configured or running in CI",
     )
     def test_real_api_low_confidence_handling(self):
         """Test real API handling of unclear requests."""
