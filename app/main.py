@@ -15,7 +15,11 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.chat import router as chat_router
+from app.api.data_sources import router as data_sources_router
 from app.api.health import router as health_router
+from app.api.jobs import router as jobs_router
+from app.api.packages import router as packages_router
 from app.config import settings
 from app.database import create_db_and_tables
 
@@ -166,6 +170,10 @@ def create_app() -> FastAPI:
 
     # Include routers
     app.include_router(health_router, prefix="/api")
+    app.include_router(chat_router, prefix="/api")
+    app.include_router(jobs_router, prefix="/api")
+    app.include_router(packages_router, prefix="/api")
+    app.include_router(data_sources_router, prefix="/api")
 
     return app
 

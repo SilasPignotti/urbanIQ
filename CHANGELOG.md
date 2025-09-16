@@ -4,6 +4,91 @@ All notable changes to the urbanIQ Berlin geodata aggregation system will be doc
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Date: 2025-09-14] - Core API Endpoints - Chat Interface and Job Management Implementation
+
+### Context
+
+- Implemented complete Core API Endpoints layer completing Step 9 of IMPLEMENTATION_ROADMAP.md with comprehensive PRP-driven development approach
+- Created systematic PRP planning process including context analysis, dependency mapping, implementation strategy, and success criteria validation
+- Developed POST /api/chat/message endpoint for natural language geodata requests with background job processing orchestration
+- Established GET /api/jobs/status/{job_id} endpoint for real-time job progress tracking and status monitoring
+- Built comprehensive service chain integration orchestrating NLP → Data → Processing → Metadata services through background task system
+- Implemented Pydantic request/response models following API_DESIGN.md specifications exactly with input validation and error handling
+- Created feature branch `feature/core-api-endpoints` with complete implementation following CLAUDE.md guidelines and existing patterns
+- Established foundation for Step 10 (Background Job Processing System) with simplified background task orchestration using FastAPI BackgroundTasks
+
+### Changes Made
+
+#### Added
+
+- `PRP/core-api-endpoints-2025-09-14.md` - Project Requirements and Planning document (~330 lines)
+  - Complete implementation specifications with 11 measurable success criteria including >90% test coverage requirement
+  - Technical architecture details for FastAPI routers, Pydantic models, async background processing, and service integration patterns
+  - Implementation strategy with 4 API routers, comprehensive test suite planning, and manual validation procedures
+  - Anti-patterns documentation preventing code duplication, hardcoded configurations, and pattern violations
+  - Context analysis referencing existing health.py patterns, service integration examples, and database transaction handling
+- `app/api/chat.py` - Chat interface endpoint implementation (~135 lines)
+  - `ChatMessage` Pydantic model with field validation (5-500 character limits, text content validation)
+  - `ChatResponse` model following API_DESIGN.md specifications with job_id, status, and German message fields
+  - `ErrorResponse` model with structured error format including correlation IDs and detailed error context
+  - POST /api/chat/message endpoint with 202 Accepted status, comprehensive OpenAPI documentation, and background task integration
+  - Input validation with Pydantic field validators and proper error handling with structured exception propagation
+- `app/api/chat_background.py` - Background job processing orchestration (~131 lines)
+  - `process_geodata_request_sync()` wrapper function handling async event loop for mixed sync/async services
+  - `_async_process_geodata_request()` implementing complete service chain: NLP → Data → Processing → Metadata
+  - Progress tracking with database updates at 25%, 50%, 75%, and 100% completion stages
+  - Comprehensive error handling with job failure states, error message storage, and structured logging
+  - Service integration using dependency injection patterns and proper database transaction management
+- `app/api/jobs.py` - Job management and status tracking endpoints (~221 lines)
+  - `JobStatusResponse` Pydantic model with comprehensive job information including progress, timestamps, and download URLs
+  - GET /api/jobs/status/{job_id} endpoint for individual job status queries with 404 handling for missing jobs
+  - GET /api/jobs/ endpoint for listing recent jobs with configurable limit and chronological ordering
+  - JSON dataset parsing with error handling, download URL generation for completed jobs, and structured logging
+- `app/api/packages.py` - Package management endpoint structure (~77 lines)
+  - Basic package download endpoint structure for future Step 11 implementation
+  - GET /api/packages/{package_id} endpoint returning 501 Not Implemented with structured error response
+  - ErrorResponse integration and placeholder for ZIP file serving functionality
+- `app/api/data_sources.py` - Data source registry endpoint structure (~76 lines)
+  - Basic data source listing endpoint structure for future development
+  - GET /api/data-sources/ endpoint returning 501 Not Implemented with feature planning documentation
+  - Placeholder for DataSource model integration and health status reporting
+
+#### Modified
+
+- `app/main.py` - FastAPI application router integration
+  - Added imports for all 5 new API routers (chat, jobs, packages, data_sources, health)
+  - Added router includes with /api prefix for chat_router, jobs_router, packages_router, data_sources_router
+  - Maintained existing health_router integration and middleware configuration
+- `app/api/__init__.py` - API module router exports
+  - Added router exports for all new API modules: chat_router, jobs_router, packages_router, data_sources_router
+  - Maintained alphabetical organization and consistent export patterns
+
+### Technical Details
+
+- **FastAPI Router Architecture**: Complete API layer with 5 routers following established health.py patterns with APIRouter, dependency injection, and structured responses
+- **Background Task Processing**: Simplified background task orchestration using FastAPI BackgroundTasks with async service chain execution and progress tracking
+- **Service Chain Integration**: Seamless integration of all 4 implemented services (NLP, Data, Processing, Metadata) with proper error handling and transaction management
+- **Pydantic Model Validation**: Comprehensive input validation with field validators, length limits, content validation, and structured error responses following API_DESIGN.md
+- **Database Transaction Management**: Proper session handling with factory patterns for background tasks, commit/rollback error handling, and job lifecycle management
+- **Error Handling Strategy**: Structured error responses with correlation IDs, German language error messages, HTTP status code mapping, and exception chaining
+- **OpenAPI Documentation Integration**: Auto-generated FastAPI documentation with proper response models, status codes, and comprehensive endpoint descriptions
+- **Code Quality Compliance**: All files under 500 lines following CLAUDE.md guidelines, comprehensive type hints, structured logging, and established naming conventions
+- **Async/Sync Service Orchestration**: Mixed service calling patterns with async processing for Data/Processing services and sync calls for NLP/Metadata services
+- **Progress Tracking Implementation**: Real-time job status updates with percentage completion, timestamp tracking, and database persistence
+
+### Next Steps
+
+- Implement Step 10 - Background Job Processing System with proper job queue (Redis/Celery) replacing simplified FastAPI BackgroundTasks
+- Create comprehensive test suite achieving >90% code coverage with unit tests, integration tests, and service chain validation
+- Implement actual ZIP package generation and file serving in packages endpoint for complete download functionality
+- Add data source registry management functionality with health monitoring and metadata serving capabilities
+- Integrate frontend HTMX interface (Step 12) consuming the implemented API endpoints for complete user workflow
+- Add rate limiting, authentication, and production security features for deployment readiness
+- Implement caching layer for repeated requests and job result storage optimization
+- Create monitoring and alerting integration for job processing performance and service health tracking
+
+---
+
 ## [Date: 2025-09-13] - LLM Metadata Service - Report Generation Implementation
 
 ### Context
