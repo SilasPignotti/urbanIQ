@@ -157,7 +157,7 @@ Erstelle ein PRP für "Processing Service - Data Harmonization": harmonize_datas
 **Claude Code Message:**
 
 ```
-Erstelle ein PRP für "LLM Metadata Service - Report Generation": create_metadata_report Funktion mit Gemini Integration implementieren, Markdown Report Templates für Geodaten-Metadatenreports, Dataset Analysis und Quality Assessment, Context Preparation für LLM, und Usage Recommendations Generation.
+Create a PRP for "LLM Metadata Service - Report Generation": implement create_metadata_report function with Gemini integration, Markdown report templates for geodata metadata reports, dataset analysis and quality assessment, context preparation for LLM processing, and usage recommendations generation.
 ```
 
 **Deliverables:**
@@ -178,7 +178,7 @@ Erstelle ein PRP für "LLM Metadata Service - Report Generation": create_metadat
 **Claude Code Message:**
 
 ```
-Erstelle ein PRP für "Core API Endpoints": POST /api/chat/message für Chat Interface implementieren, GET /api/jobs/status/{job_id} für Job Status, Job Management mit Database Integration, Pydantic Request/Response Models, Input Validation, und Error Response Handling entsprechend API_DESIGN.md.
+just Create a PRP for "Core API Endpoints": implement POST /api/chat/message for Chat Interface, GET /api/jobs/status/{job_id} for Job Status, Job Management with Database Integration, Pydantic Request/Response Models, Input Validation, and Error Response Handling according to API_DESIGN.md.
 ```
 
 **Deliverables:**
@@ -198,7 +198,7 @@ Erstelle ein PRP für "Core API Endpoints": POST /api/chat/message für Chat Int
 **Claude Code Message:**
 
 ```
-Erstelle ein PRP für "Background Job Processing System": Async Job Queue System implementieren, Service Integration Pipeline (NLP→Data→Processing→Metadata), Progress Tracking mit Database Updates, ZIP Package Generation mit GeoData und Reports, und Job Status Management (pending→processing→completed).
+Create a PRP for "Background Job Processing System": implement Async Job Queue System, Service Integration Pipeline (NLP→Data→Processing→Metadata), Progress Tracking with Database Updates, ZIP Package Generation with GeoData and Reports, and Job Status Management (pending→processing→completed).
 ```
 
 **Deliverables:**
@@ -219,7 +219,7 @@ Erstelle ein PRP für "Background Job Processing System": Async Job Queue System
 **Claude Code Message:**
 
 ```
-Erstelle ein PRP für "Package Management und Download System": ZIP Package Creation mit GeoData Files und Metadata Reports, File Storage Management im data/exports/ Verzeichnis, Download Endpoints mit File Serving, Automatic Cleanup Jobs für expired packages, und Package Metadata Database Storage.
+Create a PRP for "Package Management and Download System": ZIP Package Creation with GeoData Files and Metadata Reports, File Storage Management in data/exports/ directory, Download Endpoints with File Serving, Automatic Cleanup Jobs for expired packages, and Package Metadata Database Storage.
 ```
 
 **Deliverables:**
@@ -238,7 +238,7 @@ Erstelle ein PRP für "Package Management und Download System": ZIP Package Crea
 **Claude Code Message:**
 
 ```
-Erstelle ein PRP für "HTMX Frontend Implementation": Jinja2 Templates für Chat Interface, HTMX Integration für reactive UI updates, Progress Indicators für Job Status, Download UI für ZIP Packages, Tailwind CSS Styling, und Static Files Setup entsprechend FRONTEND_IMPLEMENTATION.md.
+Create a PRP for "HTMX Frontend Implementation": Jinja2 Templates for Chat Interface, HTMX Integration for reactive UI updates, Progress Indicators for Job Status, Download UI for ZIP Packages, Tailwind CSS Styling, and Static Files Setup according to FRONTEND_IMPLEMENTATION.md.
 ```
 
 **Deliverables:**
@@ -260,7 +260,7 @@ Erstelle ein PRP für "HTMX Frontend Implementation": Jinja2 Templates für Chat
 **Claude Code Message:**
 
 ```
-Erstelle ein PRP für "Testing Suite Implementation": Unit Tests für alle Services implementieren, Integration Tests für API Endpoints, Mock Connectors für Testing, Test Database Setup, Pytest Configuration mit Coverage, und Test Data Generation entsprechend TESTING_STRATEGY.md.
+Create a PRP for "Testing Suite Implementation": implement Unit Tests for all Services, Integration Tests for API Endpoints, Mock Connectors for Testing, Test Database Setup, Pytest Configuration with Coverage, and Test Data Generation according to TESTING_STRATEGY.md.
 ```
 
 **Deliverables:**
@@ -280,7 +280,7 @@ Erstelle ein PRP für "Testing Suite Implementation": Unit Tests für alle Servi
 **Claude Code Message:**
 
 ```
-Erstelle ein PRP für "Production Features": Environment Configuration für Development/Production, Docker Setup mit multi-stage builds, Comprehensive Health Checks für alle Services, Structured Logging mit Correlation IDs, Security Headers, und Production-ready CORS Configuration entsprechend DEPLOYMENT_CONFIGURATION.md.
+Create a PRP for "Production Features": Environment Configuration for Development/Production, Docker Setup with multi-stage builds, Comprehensive Health Checks for all Services, Structured Logging with Correlation IDs, Security Headers, and Production-ready CORS Configuration according to DEPLOYMENT_CONFIGURATION.md.
 ```
 
 **Deliverables:**
