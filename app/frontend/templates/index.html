@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}urbanIQ Berlin - Geodaten-Assistent{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+  <div class="text-center">
+    <h2 class="text-2xl font-bold text-gray-900 mb-3">
+      Willkommen beim Geodaten-Assistenten
+    </h2>
+    <p class="text-gray-600 max-w-2xl mx-auto">
+      Beschreiben Sie Ihre Geodaten-Anfrage in natürlicher Sprache.
+      Unser System aggregiert automatisch Daten aus dem Berlin Geoportal und OpenStreetMap
+      für Ihre Stadtplanungsanalysen.
+    </p>
+  </div>
+</div>
+
+<!-- Chat Input Form -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+  <form
+    hx-post="/api/chat/message"
+    hx-target="#chat-result"
+    hx-indicator="#form-loading"
+    hx-swap="innerHTML"
+    class="space-y-4"
+    role="form"
+    aria-label="Geodaten-Anfrage Formular"
+  >
+    <div>
+      <label for="geodata-request" class="block text-sm font-medium text-gray-700 mb-2">
+        Ihre Geodaten-Anfrage
+      </label>
+      <div class="relative">
+        <textarea
+          id="geodata-request"
+          name="text"
+          rows="3"
+          class="input-field w-full resize-none"
+          placeholder="z.B.: Pankow Gebäude und ÖPNV-Haltestellen für Mobilitätsanalyse"
+          aria-describedby="request-help"
+          required
+          minlength="5"
+          maxlength="500"
+        ></textarea>
+        <div class="absolute bottom-2 right-2 text-xs text-gray-400" id="char-counter">
+          0/500
+        </div>
+      </div>
+      <p id="request-help" class="mt-1 text-sm text-gray-500">
+        Beschreiben Sie, welche Geodaten Sie für welchen Berliner Bezirk benötigen.
+        Beispiele: Gebäude, ÖPNV-Haltestellen, Bezirksgrenzen.
+      </p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <button
+        type="submit"
+        class="btn-primary w-full sm:w-auto order-2 sm:order-1"
+        aria-describedby="submit-help"
+      >
+        <span class="flex items-center justify-center space-x-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+          </svg>
+          <span>Geodaten abfragen</span>
+        </span>
+      </button>
+
+      <div class="text-sm text-gray-500 order-1 sm:order-2">
+        <p id="submit-help">
+          <span class="inline-flex items-center space-x-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Verarbeitung dauert 30-60 Sekunden</span>
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Form Loading Indicator -->
+    <div id="form-loading" class="htmx-indicator">
+      <div class="flex items-center justify-center space-x-2 text-urban-blue-600 py-2">
+        <div class="animate-spin h-4 w-4 border-2 border-urban-blue-600 border-t-transparent rounded-full"></div>
+        <span class="text-sm font-medium">Anfrage wird übermittelt...</span>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Results Container -->
+<div id="chat-result" role="region" aria-label="Verarbeitungsergebnisse" aria-live="polite">
+  <!-- Dynamic content will be inserted here via HTMX -->
+</div>
+
+<!-- Example Queries -->
+<div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+  <h3 class="text-lg font-semibold text-gray-900 mb-4">Beispiel-Anfragen</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-white rounded-lg p-4 border border-gray-200">
+      <h4 class="font-medium text-gray-900 mb-2">Mobilitätsanalyse</h4>
+      <p class="text-sm text-gray-600 mb-3">
+        "Pankow Gebäude und ÖPNV-Haltestellen für Mobilitätsanalyse"
+      </p>
+      <button
+        class="example-query text-xs text-urban-blue-600 hover:text-urban-blue-700 font-medium"
+        data-query="Pankow Gebäude und ÖPNV-Haltestellen für Mobilitätsanalyse"
+      >
+        Beispiel verwenden →
+      </button>
+    </div>
+
+    <div class="bg-white rounded-lg p-4 border border-gray-200">
+      <h4 class="font-medium text-gray-900 mb-2">Bezirksanalyse</h4>
+      <p class="text-sm text-gray-600 mb-3">
+        "Mitte Grunddaten mit Bezirksgrenzen und Gebäuden"
+      </p>
+      <button
+        class="example-query text-xs text-urban-blue-600 hover:text-urban-blue-700 font-medium"
+        data-query="Mitte Grunddaten mit Bezirksgrenzen und Gebäuden"
+      >
+        Beispiel verwenden →
+      </button>
+    </div>
+
+    <div class="bg-white rounded-lg p-4 border border-gray-200">
+      <h4 class="font-medium text-gray-900 mb-2">ÖPNV-Analyse</h4>
+      <p class="text-sm text-gray-600 mb-3">
+        "Friedrichshain-Kreuzberg ÖPNV-Haltestellen für Verkehrsplanung"
+      </p>
+      <button
+        class="example-query text-xs text-urban-blue-600 hover:text-urban-blue-700 font-medium"
+        data-query="Friedrichshain-Kreuzberg ÖPNV-Haltestellen für Verkehrsplanung"
+      >
+        Beispiel verwenden →
+      </button>
+    </div>
+
+    <div class="bg-white rounded-lg p-4 border border-gray-200">
+      <h4 class="font-medium text-gray-900 mb-2">Stadtentwicklung</h4>
+      <p class="text-sm text-gray-600 mb-3">
+        "Charlottenburg-Wilmersdorf Gebäude für Stadtentwicklungsplanung"
+      </p>
+      <button
+        class="example-query text-xs text-urban-blue-600 hover:text-urban-blue-700 font-medium"
+        data-query="Charlottenburg-Wilmersdorf Gebäude für Stadtentwicklungsplanung"
+      >
+        Beispiel verwenden →
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Character counter for textarea
+document.addEventListener('DOMContentLoaded', function() {
+  const textarea = document.getElementById('geodata-request');
+  const counter = document.getElementById('char-counter');
+
+  if (textarea && counter) {
+    function updateCounter() {
+      const length = textarea.value.length;
+      counter.textContent = `${length}/500`;
+
+      // Visual feedback for character limit
+      if (length > 450) {
+        counter.classList.add('text-urban-red-600');
+        counter.classList.remove('text-gray-400');
+      } else {
+        counter.classList.remove('text-urban-red-600');
+        counter.classList.add('text-gray-400');
+      }
+    }
+
+    textarea.addEventListener('input', updateCounter);
+    updateCounter(); // Initial update
+  }
+});
+
+// Example query handlers
+document.addEventListener('DOMContentLoaded', function() {
+  const exampleButtons = document.querySelectorAll('.example-query');
+  const textarea = document.getElementById('geodata-request');
+
+  exampleButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const query = this.getAttribute('data-query');
+      if (textarea && query) {
+        textarea.value = query;
+        textarea.focus();
+
+        // Trigger character counter update
+        const event = new Event('input', { bubbles: true });
+        textarea.dispatchEvent(event);
+
+        // Scroll to form
+        textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  });
+});
+
+// Form validation enhancement
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('form[hx-post="/api/chat/message"]');
+  const textarea = document.getElementById('geodata-request');
+
+  if (form && textarea) {
+    form.addEventListener('submit', function(e) {
+      const text = textarea.value.trim();
+
+      if (text.length < 5) {
+        e.preventDefault();
+        alert('Bitte geben Sie eine aussagekräftige Anfrage mit mindestens 5 Zeichen ein.');
+        textarea.focus();
+        return;
+      }
+
+      if (text.length > 500) {
+        e.preventDefault();
+        alert('Ihre Anfrage ist zu lang. Bitte beschränken Sie sich auf maximal 500 Zeichen.');
+        textarea.focus();
+        return;
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

@@ -9,14 +9,17 @@ import logging
 import uuid
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import structlog
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.chat import router as chat_router
 from app.api.data_sources import router as data_sources_router
+from app.api.frontend import router as frontend_router
 from app.api.health import router as health_router
 from app.api.jobs import router as jobs_router
 from app.api.packages import router as packages_router
@@ -168,12 +171,20 @@ def create_app() -> FastAPI:
             },
         )
 
+    # Mount static files
+    static_dir = Path(__file__).parent / "frontend" / "static"
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
     # Include routers
     app.include_router(health_router, prefix="/api")
     app.include_router(chat_router, prefix="/api")
     app.include_router(jobs_router, prefix="/api")
     app.include_router(packages_router, prefix="/api")
     app.include_router(data_sources_router, prefix="/api")
+
+    # Include frontend router (no prefix for root paths)
+    app.include_router(frontend_router)
 
     return app
 
