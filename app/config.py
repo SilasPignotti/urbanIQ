@@ -8,7 +8,7 @@ typed configuration objects for the entire application.
 import logging
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -48,8 +48,11 @@ class Settings(BaseSettings):
         description="Allowed CORS origins",
     )
 
-    # Future service integrations (placeholders)
-    google_api_key: str = Field(default="", description="Google Gemini API key")
+    # Google Gemini API Integration
+    google_api_key: SecretStr = Field(
+        default=SecretStr(""),
+        description="Google Gemini API key for LLM services",
+    )
 
     # File paths
     temp_dir: str = Field(default="./data/temp", description="Temporary files")
@@ -73,6 +76,26 @@ class Settings(BaseSettings):
         if v.lower() not in valid_envs:
             raise ValueError(f"environment must be one of {valid_envs}")
         return v.lower()
+
+    @field_validator("google_api_key")
+    @classmethod
+    def validate_google_api_key(cls, v: SecretStr | str) -> SecretStr:
+        """Validate Google API key format and security."""
+        if isinstance(v, str):
+            v = SecretStr(v)
+
+        key_value = v.get_secret_value()
+        if not key_value:
+            raise ValueError("Google API key is required. Set GOOGLE_API_KEY environment variable.")
+
+        # Basic API key format validation (Google API keys are typically 39 chars)
+        if len(key_value) < 20:
+            raise ValueError(
+                "Google API key appears to be invalid (too short). "
+                "Please check your GOOGLE_API_KEY environment variable."
+            )
+
+        return v
 
     def ensure_directories(self) -> None:
         """Ensure all required directories exist."""

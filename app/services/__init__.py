@@ -1,6 +1,7 @@
 # Services module initialization
 
 from .data_service import DataService
+from .export_service import ExportError, ExportService, PackageGenerationError
 from .metadata_service import MetadataError, MetadataService
 from .nlp_service import NLPService, ParsedRequest
 from .processing_service import ProcessingError, ProcessingService
@@ -13,4 +14,7 @@ __all__ = [
     "ProcessingError",
     "MetadataService",
     "MetadataError",
+    "ExportService",
+    "ExportError",
+    "PackageGenerationError",
 ]

@@ -94,12 +94,21 @@ class MetadataService:
 
         # Initialize Gemini AI client if API key available
         self.llm = None
-        if settings.google_api_key:
+        # Handle both SecretStr and string types (for testing compatibility)
+        api_key_value: str | None = None
+        if hasattr(settings.google_api_key, "get_secret_value"):
+            api_key_value = settings.google_api_key.get_secret_value()
+        else:
+            api_key_value = str(settings.google_api_key) if settings.google_api_key else None
+
+        if api_key_value:
             try:
                 self.llm = ChatGoogleGenerativeAI(
                     model="gemini-1.5-pro",
                     temperature=0.3,  # Creative but consistent for report generation
-                    google_api_key=SecretStr(settings.google_api_key),
+                    google_api_key=settings.google_api_key
+                    if hasattr(settings.google_api_key, "get_secret_value")
+                    else SecretStr(str(settings.google_api_key)),
                 )
                 logger.info("Gemini AI client initialized successfully")
             except Exception as e:
