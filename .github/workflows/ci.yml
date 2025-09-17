@@ -99,14 +99,14 @@ jobs:
             uv run pytest tests/ -v
           fi
         env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || 'mock-key-for-testing' }}
+          OPENAI_API_KEY: 'mock-key-for-testing'
 
       - name: Run integration tests (non-blocking)
         continue-on-error: true
         run: uv run pytest tests/test_connectors/ tests/test_services/ -v --maxfail=3
         env:
           INTEGRATION_TESTS: true
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || 'mock-key-for-testing' }}
+          OPENAI_API_KEY: 'mock-key-for-testing'
 
       - name: Upload coverage reports
         if: matrix.coverage == true
