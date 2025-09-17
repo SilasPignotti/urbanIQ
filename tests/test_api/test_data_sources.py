@@ -7,7 +7,6 @@ with database integration and error handling validation.
 
 from unittest.mock import patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.models import DataSource

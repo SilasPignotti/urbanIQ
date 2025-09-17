@@ -5,12 +5,10 @@ Tests secure ZIP package downloads, file serving, security validation,
 download tracking, and error handling with realistic file scenarios.
 """
 
-import tempfile
 import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.models import Package

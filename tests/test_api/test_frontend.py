@@ -7,7 +7,6 @@ and complete frontend functionality with German localization validation.
 
 from unittest.mock import patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 

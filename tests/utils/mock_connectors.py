@@ -6,12 +6,11 @@ connectors with configurable scenarios including success and error cases.
 """
 
 from typing import Any
-from unittest.mock import AsyncMock
 
 import geopandas as gpd
-from shapely.geometry import Point, Polygon
 
 from app.connectors.base import ConnectorError, ServiceUnavailableError
+
 from .test_data_generator import BerlinGeodataGenerator
 
 

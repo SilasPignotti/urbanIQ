@@ -5,10 +5,8 @@ Tests natural language geodata request processing, background job creation,
 input validation, error handling, and integration with NLP service.
 """
 
-import json
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.models import Job, JobStatus

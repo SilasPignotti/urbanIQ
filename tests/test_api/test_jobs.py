@@ -8,7 +8,6 @@ with database integration and error handling validation.
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.models import Job, JobStatus, Package

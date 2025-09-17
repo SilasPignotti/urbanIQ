@@ -6,11 +6,10 @@ transport stops, and other geodata for comprehensive testing scenarios.
 """
 
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
 import geopandas as gpd
-import pandas as pd
 from faker import Faker
 from shapely.geometry import Point, Polygon
 
