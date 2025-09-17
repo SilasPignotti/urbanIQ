@@ -20,7 +20,7 @@ class TestSettings:
 
     def test_default_values(self):
         """Test default configuration values."""
-        with patch.dict(os.environ, {"GOOGLE_API_KEY": "test_api_key_minimum_length"}, clear=True):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test_api_key_minimum_length_for_openai"}, clear=True):
             settings = Settings(_env_file=None)
 
             assert settings.app_name == "urbaniq"

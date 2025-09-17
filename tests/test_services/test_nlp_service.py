@@ -2,7 +2,7 @@
 Comprehensive tests for NLP Service.
 
 Tests German language parsing, district recognition, dataset identification,
-confidence scoring, and error handling with Google API mocking.
+confidence scoring, and error handling with OpenAI API mocking.
 """
 
 import json
@@ -139,7 +139,7 @@ class TestNLPService:
 
     def test_nlp_service_initialization_success(self):
         """Test successful NLPService initialization with API key."""
-        with patch("app.services.nlp_service.settings.google_api_key", "test-api-key"):
+        with patch("app.services.nlp_service.settings.openai_api_key", "sk-test-api-key-openai-minimum-length"):
             service = NLPService()
             assert service.confidence_threshold == 0.7
             assert service.llm is not None
@@ -148,12 +148,12 @@ class TestNLPService:
     def test_nlp_service_initialization_fails_without_api_key(self):
         """Test NLPService initialization fails without API key."""
         with (
-            patch("app.services.nlp_service.settings.google_api_key", ""),
-            pytest.raises(ValueError, match="Google API key not configured"),
+            patch("app.services.nlp_service.settings.openai_api_key", ""),
+            pytest.raises(ValueError, match="OpenAI API key not configured"),
         ):
             NLPService()
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
     def test_parse_user_request_with_empty_input(self):
         """Test parse_user_request handles empty input."""
         service = NLPService()
@@ -163,7 +163,7 @@ class TestNLPService:
         assert result.error_message == "Empty or invalid input text"
         assert result.reasoning == "Eingabe ist leer oder ungültig"
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
     def test_parse_user_request_with_too_long_input(self):
         """Test parse_user_request handles input that is too long."""
         service = NLPService()
@@ -174,8 +174,8 @@ class TestNLPService:
         assert "too long" in result.error_message
         assert "zu lang" in result.reasoning
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
-    @patch("app.services.nlp_service.ChatGoogleGenerativeAI")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
+    @patch("app.services.nlp_service.ChatOpenAI")
     def test_parse_user_request_successful_parsing(self, mock_llm_class):
         """Test successful parsing of German geodata request."""
         # Mock LLM response
@@ -200,8 +200,8 @@ class TestNLPService:
         assert result.confidence == 0.95
         assert result.is_confident is True
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
-    @patch("app.services.nlp_service.ChatGoogleGenerativeAI")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
+    @patch("app.services.nlp_service.ChatOpenAI")
     def test_parse_user_request_low_confidence_handling(self, mock_llm_class):
         """Test handling of low confidence responses."""
         # Mock LLM response with low confidence
@@ -225,8 +225,8 @@ class TestNLPService:
         assert result.is_confident is False
         assert "Niedrige Confidence" in result.error_message
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
-    @patch("app.services.nlp_service.ChatGoogleGenerativeAI")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
+    @patch("app.services.nlp_service.ChatOpenAI")
     def test_parse_user_request_api_error_handling(self, mock_llm_class):
         """Test handling of API errors during parsing."""
         # Mock API error
@@ -241,8 +241,8 @@ class TestNLPService:
         assert "Parsing failed" in result.error_message
         assert "Fehler beim Verarbeiten" in result.reasoning
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
-    @patch("app.services.nlp_service.ChatGoogleGenerativeAI")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
+    @patch("app.services.nlp_service.ChatOpenAI")
     def test_parse_user_request_german_district_variations(self, mock_llm_class):
         """Test parsing with various German district name formats."""
         test_cases = [
@@ -264,8 +264,8 @@ class TestNLPService:
             assert result.bezirk == expected_district
             assert result.is_confident is True
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
-    @patch("app.services.nlp_service.ChatGoogleGenerativeAI")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
+    @patch("app.services.nlp_service.ChatOpenAI")
     def test_parse_user_request_mixed_language_support(self, mock_llm_class):
         """Test parsing with mixed German/English input."""
         mock_response = Mock()
@@ -288,7 +288,7 @@ class TestNLPService:
         assert result.datasets == ["gebaeude", "oepnv_haltestellen"]
         assert result.is_confident is True
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
     def test_get_suggestion_for_failed_request_no_bezirk(self):
         """Test suggestion generation when no district is identified."""
         service = NLPService()
@@ -298,7 +298,7 @@ class TestNLPService:
         assert "Berliner Bezirk" in suggestion
         assert "Verfügbare Bezirke" in suggestion
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
     def test_get_suggestion_for_failed_request_no_datasets(self):
         """Test suggestion generation when no datasets are identified."""
         service = NLPService()
@@ -309,7 +309,7 @@ class TestNLPService:
         assert "Gebäude" in suggestion
         assert "ÖPNV-Haltestellen" in suggestion
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
     def test_get_suggestion_for_failed_request_general(self):
         """Test suggestion generation for general unclear requests."""
         service = NLPService()
@@ -323,8 +323,8 @@ class TestNLPService:
 class TestNLPServiceIntegration:
     """Integration tests for NLP Service with Job model."""
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
-    @patch("app.services.nlp_service.ChatGoogleGenerativeAI")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
+    @patch("app.services.nlp_service.ChatOpenAI")
     def test_nlp_service_job_model_integration(self, mock_llm_class):
         """Test integration with Job model creation workflow."""
         from app.models import Job
@@ -356,8 +356,8 @@ class TestNLPServiceIntegration:
         assert job.datasets == '["gebaeude"]'
         assert job.request_text == "Pankow Gebäude für Stadtplanung"
 
-    @patch("app.services.nlp_service.settings.google_api_key", "test-api-key")
-    @patch("app.services.nlp_service.ChatGoogleGenerativeAI")
+    @patch("app.services.nlp_service.settings.openai_api_key", "test-api-key")
+    @patch("app.services.nlp_service.ChatOpenAI")
     def test_nlp_service_confidence_threshold_integration(self, mock_llm_class):
         """Test confidence threshold handling in service workflow."""
         # Mock low confidence response
@@ -391,7 +391,7 @@ class TestNLPServiceIntegration:
 
 @pytest.mark.external
 class TestNLPServiceRealAPI:
-    """Integration tests using real Google Gemini API calls.
+    """Integration tests using real OpenAI GPT API calls.
 
     These tests require GOOGLE_API_KEY to be set and make real API calls.
     Run with: pytest -m external
@@ -399,10 +399,10 @@ class TestNLPServiceRealAPI:
     """
 
     @pytest.mark.skipif(
-        not settings.google_api_key.get_secret_value()
-        or settings.google_api_key.get_secret_value() == "your-gemini-api-key-here"
+        not settings.openai_api_key.get_secret_value()
+        or settings.openai_api_key.get_secret_value() == "your-gemini-api-key-here"
         or os.getenv("CI") == "true",
-        reason="No valid Google API key configured or running in CI",
+        reason="No valid OpenAI API key configured or running in CI",
     )
     def test_real_api_german_parsing(self):
         """Test real API parsing with German geodata requests."""
@@ -440,10 +440,10 @@ class TestNLPServiceRealAPI:
             assert result.is_confident, f"Not confident for: {case['input']}"
 
     @pytest.mark.skipif(
-        not settings.google_api_key.get_secret_value()
-        or settings.google_api_key.get_secret_value() == "your-gemini-api-key-here"
+        not settings.openai_api_key.get_secret_value()
+        or settings.openai_api_key.get_secret_value() == "your-gemini-api-key-here"
         or os.getenv("CI") == "true",
-        reason="No valid Google API key configured or running in CI",
+        reason="No valid OpenAI API key configured or running in CI",
     )
     def test_real_api_low_confidence_handling(self):
         """Test real API handling of unclear requests."""

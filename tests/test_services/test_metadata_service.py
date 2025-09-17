@@ -1,7 +1,7 @@
 """
 Tests for MetadataService LLM-powered metadata report generation.
 
-Comprehensive test suite covering template rendering, Gemini AI integration,
+Comprehensive test suite covering template rendering, GPT AI integration,
 quality assessment processing, and multilingual support.
 """
 
@@ -20,9 +20,9 @@ class TestMetadataServiceInitialization:
     """Test MetadataService initialization and configuration."""
 
     def test_service_initialization_without_api_key(self):
-        """Test service initialization when Google API key is not configured."""
+        """Test service initialization when OpenAI API key is not configured."""
         with patch("app.services.metadata_service.settings") as mock_settings:
-            mock_settings.google_api_key = None
+            mock_settings.openai_api_key = None
 
             service = MetadataService()
 
@@ -30,23 +30,23 @@ class TestMetadataServiceInitialization:
             assert service.template_env is not None
 
     def test_service_initialization_with_api_key(self):
-        """Test service initialization with valid Google API key."""
+        """Test service initialization with valid OpenAI API key."""
         with patch("app.services.metadata_service.settings") as mock_settings:
-            mock_settings.google_api_key = "test-api-key"
+            mock_settings.openai_api_key = "test-api-key"
 
-            with patch("app.services.metadata_service.ChatGoogleGenerativeAI") as mock_llm:
+            with patch("app.services.metadata_service.ChatOpenAI") as mock_llm:
                 service = MetadataService()
 
                 assert service.llm is not None
                 mock_llm.assert_called_once()
 
     def test_service_initialization_with_invalid_api_key(self):
-        """Test service initialization with invalid Google API key."""
+        """Test service initialization with invalid OpenAI API key."""
         with patch("app.services.metadata_service.settings") as mock_settings:
-            mock_settings.google_api_key = "invalid-key"
+            mock_settings.openai_api_key = "invalid-key"
 
             with patch(
-                "app.services.metadata_service.ChatGoogleGenerativeAI",
+                "app.services.metadata_service.ChatOpenAI",
                 side_effect=Exception("API error"),
             ):
                 service = MetadataService()
@@ -56,7 +56,7 @@ class TestMetadataServiceInitialization:
     def test_template_environment_setup(self):
         """Test Jinja2 template environment configuration."""
         with patch("app.services.metadata_service.settings") as mock_settings:
-            mock_settings.google_api_key = None
+            mock_settings.openai_api_key = None
 
             service = MetadataService()
 
@@ -71,7 +71,7 @@ class TestCreateMetadataReport:
     def service(self):
         """Create MetadataService instance for testing."""
         with patch("app.services.metadata_service.settings") as mock_settings:
-            mock_settings.google_api_key = None
+            mock_settings.openai_api_key = None
             return MetadataService()
 
     @pytest.fixture
@@ -170,7 +170,7 @@ class TestTemplateContextPreparation:
     def service(self):
         """Create MetadataService instance for testing."""
         with patch("app.services.metadata_service.settings") as mock_settings:
-            mock_settings.google_api_key = None
+            mock_settings.openai_api_key = None
             return MetadataService()
 
     def test_prepare_template_context_basic(self, service):
@@ -327,9 +327,9 @@ class TestLLMIntegration:
     def service_with_llm(self):
         """Create MetadataService with mocked LLM."""
         with patch("app.services.metadata_service.settings") as mock_settings:
-            mock_settings.google_api_key = "test-key"
+            mock_settings.openai_api_key = "test-key"
 
-            with patch("app.services.metadata_service.ChatGoogleGenerativeAI") as mock_llm_class:
+            with patch("app.services.metadata_service.ChatOpenAI") as mock_llm_class:
                 mock_llm = Mock()
                 mock_llm_class.return_value = mock_llm
 
@@ -435,7 +435,7 @@ class TestMetadataServiceIntegration:
     def service(self):
         """Create MetadataService for integration testing."""
         with patch("app.services.metadata_service.settings") as mock_settings:
-            mock_settings.google_api_key = None
+            mock_settings.openai_api_key = None
             return MetadataService()
 
     def test_end_to_end_metadata_generation_german(self, service):
@@ -571,7 +571,7 @@ class TestErrorHandling:
     def service(self):
         """Create MetadataService for error testing."""
         with patch("app.services.metadata_service.settings") as mock_settings:
-            mock_settings.google_api_key = None
+            mock_settings.openai_api_key = None
             return MetadataService()
 
     def test_missing_runtime_stats(self, service):

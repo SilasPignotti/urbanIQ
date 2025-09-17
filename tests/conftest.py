@@ -6,8 +6,8 @@ and sample geodata for comprehensive testing of all application components.
 """
 
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import geopandas as gpd
