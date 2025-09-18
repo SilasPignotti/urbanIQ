@@ -100,12 +100,12 @@ class MetadataService:
         else:
             api_key_value = str(settings.openai_api_key) if settings.openai_api_key else None
 
-        if api_key_value:
+        if settings.openai_api_key:
             try:
                 self.llm = ChatOpenAI(
                     model_name="gpt-4o",  # Better for creative report generation
                     temperature=0.3,  # Creative but consistent for report generation
-                    openai_api_key=api_key_value,
+                    openai_api_key=settings.openai_api_key.get_secret_value(),
                 )
                 logger.info("OpenAI client initialized successfully")
             except Exception as e:
@@ -113,6 +113,7 @@ class MetadataService:
                 self.llm = None
         else:
             logger.warning("OpenAI API key not configured, LLM enhancement disabled")
+            self.llm = None
 
     def create_metadata_report(
         self, datasets: list[dict[str, Any]], bezirk: str, request_info: dict[str, Any]
