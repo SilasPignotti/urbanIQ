@@ -88,6 +88,10 @@ class Settings(BaseSettings):
         if not key_value:
             raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY environment variable.")
 
+        # Allow mock keys for testing (starts with 'mock-' or is specifically for testing)
+        if key_value.startswith("mock-") or key_value == "test-key" or key_value == "fake-key":
+            return v
+
         # Basic API key format validation (OpenAI API keys start with sk- and are ~51 chars)
         # Allow shorter keys for testing
         if not key_value.startswith("sk-") or len(key_value) < 10:
