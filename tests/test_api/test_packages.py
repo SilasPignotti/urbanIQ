@@ -312,13 +312,13 @@ class TestPackageErrorHandling:
 
     def test_package_corrupted_database_record(self, client: TestClient, db_session):
         """Test package download with corrupted database record."""
-        # Create package with invalid data
-        package = Package(
-            id="corrupted-package",
-            job_id="job-corrupted",
-            file_path=None,  # Invalid: should not be None
-            file_size=-1,  # Invalid: negative size
-        )
+        # Create package with invalid data (would fail validation)
+        # package = Package(
+        #     id="corrupted-package",
+        #     job_id="job-corrupted",
+        #     file_path=None,  # Invalid: should not be None
+        #     file_size=-1,  # Invalid: negative size
+        # )
 
         # Bypass validation by directly inserting
         db_session.execute(

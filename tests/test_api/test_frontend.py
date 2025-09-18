@@ -308,8 +308,7 @@ class TestFrontendStaticFiles:
 
         if response.status_code == 200:
             # Should have some caching headers
-            cache_headers = ["cache-control", "etag", "last-modified", "expires"]
-            has_cache_header = any(header in response.headers for header in cache_headers)
+            # has_cache_header = any(header in response.headers for header in cache_headers)
             # Cache headers are optional but good practice
             assert True  # Flexible test - cache headers are recommended but not required
 

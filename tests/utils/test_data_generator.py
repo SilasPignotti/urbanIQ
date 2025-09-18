@@ -132,7 +132,7 @@ class BerlinGeodataGenerator:
 
         # Add some irregularity to make it more realistic
         irregular_coords = []
-        for i, (lon, lat) in enumerate(coords[:-1]):  # Skip the closing point
+        for _i, (lon, lat) in enumerate(coords[:-1]):  # Skip the closing point
             # Add small random offset
             offset_lon = random.uniform(-0.01, 0.01)
             offset_lat = random.uniform(-0.005, 0.005)

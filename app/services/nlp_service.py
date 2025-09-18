@@ -151,7 +151,7 @@ class NLPService:
         self.llm = ChatOpenAI(
             model_name="gpt-4o-mini",  # Cost-effective for structured parsing
             temperature=0.1,  # Low temperature for deterministic parsing
-            openai_api_key=api_key_value,
+            openai_api_key=api_key_value,  # type: ignore[arg-type]
         )
 
         # Create parser for structured output

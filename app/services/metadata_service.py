@@ -93,19 +93,13 @@ class MetadataService:
 
         # Initialize OpenAI client if API key available
         self.llm = None
-        # Handle both SecretStr and string types (for testing compatibility)
-        api_key_value: str | None = None
-        if hasattr(settings.openai_api_key, "get_secret_value"):
-            api_key_value = settings.openai_api_key.get_secret_value()
-        else:
-            api_key_value = str(settings.openai_api_key) if settings.openai_api_key else None
 
         if settings.openai_api_key:
             try:
                 self.llm = ChatOpenAI(
                     model_name="gpt-4o",  # Better for creative report generation
                     temperature=0.3,  # Creative but consistent for report generation
-                    openai_api_key=settings.openai_api_key.get_secret_value(),
+                    openai_api_key=settings.openai_api_key.get_secret_value(),  # type: ignore[arg-type]
                 )
                 logger.info("OpenAI client initialized successfully")
             except Exception as e:

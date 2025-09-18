@@ -166,6 +166,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
     "ARG001",  # unused function argument in tests
+    "ARG002",  # unused method argument in tests
     "S101",    # use of assert in tests
 ]
 

@@ -248,13 +248,10 @@ class TestDataSourcesDocumentation:
             responses.append(response.json())
 
         # Note: correlation_id might not be in the response structure, skip this test for now
-        return  # Skip correlation ID test for now
-
-        # All correlation IDs should be unique
-        assert len(set(correlation_ids)) == len(correlation_ids)
-
-        # Correlation IDs should be non-empty strings
-        assert all(isinstance(cid, str) and len(cid) > 0 for cid in correlation_ids)
+        # When correlation IDs are implemented, this test can be reactivated
+        # correlation_ids = [r.get("correlation_id") for r in responses if r.get("correlation_id")]
+        # assert len(set(correlation_ids)) == len(correlation_ids)
+        # assert all(isinstance(cid, str) and len(cid) > 0 for cid in correlation_ids)
 
 
 class TestFutureDataSourcesImplementation:
@@ -286,26 +283,27 @@ class TestFutureDataSourcesImplementation:
         # This test documents the expected future response structure
         # When implemented, the endpoint should return something like:
 
-        expected_response_structure = {
-            "data_sources": [
-                {
-                    "id": "string",
-                    "name": "string",
-                    "type": "string",
-                    "url": "string",
-                    "description": "string",
-                    "is_active": "boolean",
-                    "health_status": "string",
-                    "last_check": "datetime",
-                }
-            ],
-            "total": "integer",
-            "health_summary": {
-                "healthy": "integer",
-                "unhealthy": "integer",
-                "unknown": "integer",
-            },
-        }
+        # Expected response structure for future implementation:
+        # {
+        #     "data_sources": [
+        #         {
+        #             "id": "string",
+        #             "name": "string",
+        #             "type": "string",
+        #             "url": "string",
+        #             "description": "string",
+        #             "is_active": "boolean",
+        #             "health_status": "string",
+        #             "last_check": "datetime",
+        #         }
+        #     ],
+        #     "total": "integer",
+        #     "health_summary": {
+        #         "healthy": "integer",
+        #         "unhealthy": "integer",
+        #         "unknown": "integer",
+        #     },
+        # }
 
         # Currently returns 501, but this documents future expectations
         response = client.get("/api/data-sources/")
