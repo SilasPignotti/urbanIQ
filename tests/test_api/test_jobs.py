@@ -51,9 +51,9 @@ class TestJobStatusEndpoint:
         """Test job status endpoint with processing job."""
         job = Job(
             id="processing-job-123",
-            user_request="Friedrichshain buildings analysis",
+            request_text="Friedrichshain buildings analysis",
             bezirk="Friedrichshain-Kreuzberg",
-            datasets=["gebaeude"],
+            datasets='["gebaeude"]',
             status=JobStatus.PROCESSING,
             progress=65,
         )
@@ -73,9 +73,9 @@ class TestJobStatusEndpoint:
         """Test job status endpoint with failed job."""
         job = Job(
             id="failed-job-456",
-            user_request="Invalid request",
+            request_text="Invalid request",
             bezirk="Unknown",
-            datasets=[],
+            datasets="[]",
             status=JobStatus.FAILED,
             progress=25,
             error_message="NLP parsing failed: district not recognized",
@@ -128,9 +128,9 @@ class TestJobStatusEndpoint:
 
         job = Job(
             id="stats-job-789",
-            user_request="Neukölln comprehensive analysis",
+            request_text="Neukölln comprehensive analysis",
             bezirk="Neukölln",
-            datasets=["gebaeude", "oepnv_haltestellen"],
+            datasets='["gebaeude", "oepnv_haltestellen"]',
             status=JobStatus.COMPLETED,
             progress=100,
             runtime_stats=runtime_stats,
@@ -159,9 +159,9 @@ class TestJobListingEndpoint:
         jobs = [
             Job(
                 id=f"list-job-{i}",
-                user_request=f"Test request {i}",
+                request_text=f"Test request {i}",
                 bezirk="Pankow",
-                datasets=["gebaeude"],
+                datasets='["gebaeude"]',
                 status=JobStatus.COMPLETED if i % 2 == 0 else JobStatus.PENDING,
                 progress=100 if i % 2 == 0 else 0,
                 created_at=datetime.now() - timedelta(hours=i),
@@ -193,9 +193,9 @@ class TestJobListingEndpoint:
         jobs = [
             Job(
                 id=f"limited-job-{i}",
-                user_request=f"Limited request {i}",
+                request_text=f"Limited request {i}",
                 bezirk="Mitte",
-                datasets=["gebaeude"],
+                datasets='["gebaeude"]',
                 status=JobStatus.COMPLETED,
                 progress=100,
             )
@@ -247,9 +247,9 @@ class TestJobListingEndpoint:
         jobs = [
             Job(
                 id=f"mixed-job-{i}",
-                user_request=f"Mixed status request {i}",
+                request_text=f"Mixed status request {i}",
                 bezirk="Charlottenburg-Wilmersdorf",
-                datasets=["gebaeude"],
+                datasets='["gebaeude"]',
                 status=status,
                 progress=25 * i if status != JobStatus.FAILED else 10,
                 error_message="Test error" if status == JobStatus.FAILED else None,
@@ -281,9 +281,9 @@ class TestJobDatasetParsing:
         """Test job status with valid datasets JSON."""
         job = Job(
             id="json-job-123",
-            user_request="Spandau analysis",
+            request_text="Spandau analysis",
             bezirk="Spandau",
-            datasets=["gebaeude", "oepnv_haltestellen"],
+            datasets='["gebaeude", "oepnv_haltestellen"]',
             status=JobStatus.COMPLETED,
             progress=100,
         )
@@ -301,9 +301,9 @@ class TestJobDatasetParsing:
         """Test job status with empty datasets."""
         job = Job(
             id="empty-datasets-job",
-            user_request="Invalid request",
+            request_text="Invalid request",
             bezirk="Unknown",
-            datasets=[],
+            datasets="[]",
             status=JobStatus.FAILED,
             progress=0,
         )
@@ -321,9 +321,9 @@ class TestJobDatasetParsing:
         """Test job status with single dataset."""
         job = Job(
             id="single-dataset-job",
-            user_request="Reinickendorf buildings only",
+            request_text="Reinickendorf buildings only",
             bezirk="Reinickendorf",
-            datasets=["gebaeude"],
+            datasets='["gebaeude"]',
             status=JobStatus.PROCESSING,
             progress=50,
         )
@@ -393,9 +393,9 @@ class TestJobsPerformance:
         jobs = [
             Job(
                 id=f"perf-job-{i:04d}",
-                user_request=f"Performance test request {i}",
+                request_text=f"Performance test request {i}",
                 bezirk="Lichtenberg",
-                datasets=["gebaeude"],
+                datasets='["gebaeude"]',
                 status=JobStatus.COMPLETED,
                 progress=100,
                 created_at=datetime.now() - timedelta(minutes=i),
@@ -425,9 +425,9 @@ class TestJobDownloadURLGeneration:
         """Test download URL generation for completed job with package."""
         job = Job(
             id="download-job-123",
-            user_request="Tempelhof analysis",
+            request_text="Tempelhof analysis",
             bezirk="Tempelhof-Schöneberg",
-            datasets=["gebaeude"],
+            datasets='["gebaeude"]',
             status=JobStatus.COMPLETED,
             progress=100,
         )
@@ -455,9 +455,9 @@ class TestJobDownloadURLGeneration:
         """Test that completed job without package has no download URL."""
         job = Job(
             id="no-package-job",
-            user_request="Steglitz analysis",
+            request_text="Steglitz analysis",
             bezirk="Steglitz-Zehlendorf",
-            datasets=["gebaeude"],
+            datasets='["gebaeude"]',
             status=JobStatus.COMPLETED,
             progress=100,
         )
@@ -475,9 +475,9 @@ class TestJobDownloadURLGeneration:
         """Test that processing job has no download URL."""
         job = Job(
             id="processing-no-url-job",
-            user_request="Marzahn analysis",
+            request_text="Marzahn analysis",
             bezirk="Marzahn-Hellersdorf",
-            datasets=["gebaeude"],
+            datasets='["gebaeude"]',
             status=JobStatus.PROCESSING,
             progress=75,
         )

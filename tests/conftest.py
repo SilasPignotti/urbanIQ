@@ -63,9 +63,9 @@ def sample_job(db_session: Session) -> Job:
     """Create sample job record for testing."""
     job = Job(
         id="test-job-123",
-        user_request="Pankow Gebäude und ÖPNV-Haltestellen für Mobilitätsanalyse",
+        request_text="Pankow Gebäude und ÖPNV-Haltestellen für Mobilitätsanalyse",
         bezirk="Pankow",
-        datasets=["gebaeude", "oepnv_haltestellen"],
+        datasets='["gebaeude", "oepnv_haltestellen"]',
         status=JobStatus.PENDING,
         progress=0,
         error_message=None,
@@ -81,9 +81,9 @@ def completed_job(db_session: Session) -> Job:
     """Create completed job record with package for testing."""
     job = Job(
         id="completed-job-456",
-        user_request="Charlottenburg buildings analysis",
+        request_text="Charlottenburg buildings analysis",
         bezirk="Charlottenburg-Wilmersdorf",
-        datasets=["gebaeude"],
+        datasets='["gebaeude"]',
         status=JobStatus.COMPLETED,
         progress=100,
         error_message=None,
@@ -207,7 +207,7 @@ def mock_gemini_response():
     """Mock Google Gemini API response for NLP parsing."""
     return {
         "bezirk": "Pankow",
-        "datasets": ["gebaeude", "oepnv_haltestellen"],
+        "datasets": '["gebaeude", "oepnv_haltestellen"]',
         "confidence": 0.95,
         "reasoning": "Clear request for buildings and transport stops in Pankow district",
     }
