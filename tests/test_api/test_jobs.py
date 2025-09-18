@@ -104,7 +104,12 @@ class TestJobStatusEndpoint:
 
     def test_job_status_endpoint_invalid_job_id_format(self, client: TestClient):
         """Test job status endpoint with invalid job ID format."""
-        invalid_ids = ["", "short", "invalid/chars", "very-very-very-long-invalid-job-id-that-exceeds-limits"]
+        invalid_ids = [
+            "",
+            "short",
+            "invalid/chars",
+            "very-very-very-long-invalid-job-id-that-exceeds-limits",
+        ]
 
         for invalid_id in invalid_ids:
             response = client.get(f"/api/jobs/status/{invalid_id}")
@@ -403,6 +408,7 @@ class TestJobsPerformance:
         db_session.commit()
 
         import time
+
         start_time = time.time()
         response = client.get("/api/jobs/?limit=50")
         response_time = time.time() - start_time

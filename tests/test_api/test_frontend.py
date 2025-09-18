@@ -46,7 +46,7 @@ class TestFrontendIndexEndpoint:
 
         # Check for German language elements
         german_indicators = [
-            "lang=\"de\"",
+            'lang="de"',
             "Geodaten",
             "Berlin",
             "Analyse",
@@ -143,7 +143,9 @@ class TestFrontendIndexEndpoint:
             "tabindex",
         ]
 
-        accessibility_found = sum(1 for indicator in accessibility_indicators if indicator in content)
+        accessibility_found = sum(
+            1 for indicator in accessibility_indicators if indicator in content
+        )
         assert accessibility_found >= 2
 
     def test_frontend_index_meta_tags(self, client: TestClient):
@@ -271,7 +273,10 @@ class TestFrontendStaticFiles:
         assert response.status_code in (200, 404)
 
         if response.status_code == 200:
-            assert "javascript" in response.headers["content-type"] or "application/javascript" in response.headers["content-type"]
+            assert (
+                "javascript" in response.headers["content-type"]
+                or "application/javascript" in response.headers["content-type"]
+            )
 
     def test_static_favicon_serving(self, client: TestClient):
         """Test favicon static file serving."""

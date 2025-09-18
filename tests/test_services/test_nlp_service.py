@@ -139,7 +139,10 @@ class TestNLPService:
 
     def test_nlp_service_initialization_success(self):
         """Test successful NLPService initialization with API key."""
-        with patch("app.services.nlp_service.settings.openai_api_key", "sk-test-api-key-openai-minimum-length"):
+        with patch(
+            "app.services.nlp_service.settings.openai_api_key",
+            "sk-test-api-key-openai-minimum-length",
+        ):
             service = NLPService()
             assert service.confidence_threshold == 0.7
             assert service.llm is not None

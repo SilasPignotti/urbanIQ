@@ -145,7 +145,9 @@ class BerlinGeodataGenerator:
 
         data = {
             "bezirk_name": [district_name],
-            "bezirk_id": [str(list(self.BERLIN_DISTRICTS.keys()).index(district_name) + 1).zfill(2)],
+            "bezirk_id": [
+                str(list(self.BERLIN_DISTRICTS.keys()).index(district_name) + 1).zfill(2)
+            ],
             "area_km2": [round(random.uniform(20, 120), 2)],
             "population": [random.randint(200000, 400000)],
             "density_type": [district_info["characteristics"]["density"]],
@@ -155,10 +157,7 @@ class BerlinGeodataGenerator:
         return gpd.GeoDataFrame(data, crs="EPSG:4326")
 
     def generate_buildings_data(
-        self,
-        district: str,
-        count: int = 100,
-        bbox: tuple[float, float, float, float] | None = None
+        self, district: str, count: int = 100, bbox: tuple[float, float, float, float] | None = None
     ) -> gpd.GeoDataFrame:
         """Generate realistic building data for a district.
 
@@ -185,7 +184,7 @@ class BerlinGeodataGenerator:
             # Choose building type based on frequency
             building_type = random.choices(
                 list(self.BUILDING_TYPES.keys()),
-                weights=[info["frequency"] for info in self.BUILDING_TYPES.values()]
+                weights=[info["frequency"] for info in self.BUILDING_TYPES.values()],
             )[0]
 
             type_info = self.BUILDING_TYPES[building_type]
@@ -208,17 +207,14 @@ class BerlinGeodataGenerator:
                     "floors": floors,
                     "address": fake.street_address(),
                     "roof_type": random.choice(["flat", "pitched", "mansard"]),
-                }
+                },
             }
             buildings.append(building)
 
         return gpd.GeoDataFrame(buildings, crs="EPSG:4326")
 
     def generate_transport_stops_data(
-        self,
-        district: str,
-        count: int = 50,
-        bbox: tuple[float, float, float, float] | None = None
+        self, district: str, count: int = 50, bbox: tuple[float, float, float, float] | None = None
     ) -> gpd.GeoDataFrame:
         """Generate realistic transport stop data for a district.
 
@@ -245,7 +241,7 @@ class BerlinGeodataGenerator:
             # Choose transport type based on frequency
             transport_type = random.choices(
                 list(self.TRANSPORT_TYPES.keys()),
-                weights=[info["frequency"] for info in self.TRANSPORT_TYPES.values()]
+                weights=[info["frequency"] for info in self.TRANSPORT_TYPES.values()],
             )[0]
 
             type_info = self.TRANSPORT_TYPES[transport_type]
@@ -264,7 +260,7 @@ class BerlinGeodataGenerator:
                     "shelter": random.choice(["yes", "no"]),
                     "wheelchair": random.choice(["yes", "limited", "no"]),
                     "operator": self._get_transport_operator(transport_type),
-                }
+                },
             }
             stops.append(stop)
 
@@ -403,7 +399,7 @@ class BerlinGeodataGenerator:
 - **Gesamtfeatures**: {random.randint(100, 5000)}
 
 ## Datenqualität
-- **Qualitätsbewertung**: {random.choice(['Sehr hoch', 'Hoch', 'Gut'])}
+- **Qualitätsbewertung**: {random.choice(["Sehr hoch", "Hoch", "Gut"])}
 - **Vollständigkeit**: {random.randint(85, 100)}%
 - **Räumliche Abdeckung**: {random.randint(90, 100)}%
 
@@ -413,5 +409,5 @@ class BerlinGeodataGenerator:
 ## Technische Details
 - **Koordinatensystem**: EPSG:25833
 - **Format**: GeoJSON, Shapefile
-- **Lizenz**: {random.choice(['CC BY 3.0 DE', 'ODbL'])}
+- **Lizenz**: {random.choice(["CC BY 3.0 DE", "ODbL"])}
 """

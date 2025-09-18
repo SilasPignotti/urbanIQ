@@ -34,7 +34,9 @@ class TestPackageDownloadEndpoint:
         assert response.status_code == 200
         assert response.headers["content-type"] == "application/zip"
         assert "attachment" in response.headers["content-disposition"]
-        assert f"filename=geodata_package_{package.id}.zip" in response.headers["content-disposition"]
+        assert (
+            f"filename=geodata_package_{package.id}.zip" in response.headers["content-disposition"]
+        )
         assert response.headers["x-package-id"] == package.id
         assert "x-download-count" in response.headers
 
@@ -67,7 +69,9 @@ class TestPackageDownloadEndpoint:
         error_data = response.json()
         assert "nicht gefunden" in error_data["error"]["message"].lower()
 
-    def test_package_download_expired_package(self, client: TestClient, temp_zip_file: Path, db_session):
+    def test_package_download_expired_package(
+        self, client: TestClient, temp_zip_file: Path, db_session
+    ):
         """Test package download with expired package."""
         from datetime import datetime, timedelta
 
@@ -110,7 +114,9 @@ class TestPackageDownloadEndpoint:
                 error_data = response.json()
                 assert "ungültiges paket-format" in error_data["error"]["message"].lower()
 
-    def test_package_download_non_zip_file(self, client: TestClient, temp_export_dir: Path, db_session):
+    def test_package_download_non_zip_file(
+        self, client: TestClient, temp_export_dir: Path, db_session
+    ):
         """Test package download with non-ZIP file."""
         # Create a text file instead of ZIP
         text_file = temp_export_dir / "not_a_zip.txt"
@@ -131,7 +137,9 @@ class TestPackageDownloadEndpoint:
         error_data = response.json()
         assert "ungültiges paket-format" in error_data["error"]["message"].lower()
 
-    def test_package_download_large_file(self, client: TestClient, temp_export_dir: Path, db_session):
+    def test_package_download_large_file(
+        self, client: TestClient, temp_export_dir: Path, db_session
+    ):
         """Test package download with large ZIP file."""
         # Create a larger ZIP file
         large_zip = temp_export_dir / "large_package.zip"
@@ -157,7 +165,9 @@ class TestPackageDownloadEndpoint:
         assert response.headers["content-type"] == "application/zip"
         assert int(response.headers["content-length"]) > 10000
 
-    def test_package_download_concurrent_access(self, client: TestClient, temp_zip_file: Path, db_session):
+    def test_package_download_concurrent_access(
+        self, client: TestClient, temp_zip_file: Path, db_session
+    ):
         """Test concurrent package downloads and counter accuracy."""
         package = Package(
             id="concurrent-package",
@@ -183,7 +193,9 @@ class TestPackageDownloadEndpoint:
         db_session.refresh(package)
         assert package.download_count == 5
 
-    def test_package_download_headers_validation(self, client: TestClient, temp_zip_file: Path, db_session):
+    def test_package_download_headers_validation(
+        self, client: TestClient, temp_zip_file: Path, db_session
+    ):
         """Test all required headers in package download response."""
         package = Package(
             id="headers-test-package",
@@ -311,7 +323,7 @@ class TestPackageErrorHandling:
         # Bypass validation by directly inserting
         db_session.execute(
             "INSERT INTO packages (id, job_id, file_path, file_size) VALUES (?, ?, ?, ?)",
-            ("corrupted-package", "job-corrupted", None, -1)
+            ("corrupted-package", "job-corrupted", None, -1),
         )
         db_session.commit()
 
@@ -323,7 +335,9 @@ class TestPackageErrorHandling:
 class TestPackagePerformance:
     """Test cases for package download performance."""
 
-    def test_package_download_response_time(self, client: TestClient, temp_zip_file: Path, db_session):
+    def test_package_download_response_time(
+        self, client: TestClient, temp_zip_file: Path, db_session
+    ):
         """Test package download response time for small files."""
         import time
 
@@ -343,7 +357,9 @@ class TestPackagePerformance:
         assert response.status_code == 200
         assert response_time < 3.0  # Should download quickly for small files
 
-    def test_package_download_memory_efficiency(self, client: TestClient, temp_export_dir: Path, db_session):
+    def test_package_download_memory_efficiency(
+        self, client: TestClient, temp_export_dir: Path, db_session
+    ):
         """Test memory efficiency for larger file downloads."""
         # Create moderately large ZIP file
         large_zip = temp_export_dir / "memory_test.zip"
@@ -369,7 +385,9 @@ class TestPackagePerformance:
         assert response.status_code == 200
         assert response.headers["content-type"] == "application/zip"
 
-    def test_package_download_concurrent_load(self, client: TestClient, temp_zip_file: Path, db_session):
+    def test_package_download_concurrent_load(
+        self, client: TestClient, temp_zip_file: Path, db_session
+    ):
         """Test package download under concurrent load."""
         package = Package(
             id="load-test-package",

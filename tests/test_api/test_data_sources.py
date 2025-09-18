@@ -23,7 +23,10 @@ class TestDataSourcesEndpoint:
         error_data = response.json()
         assert "detail" in error_data
         assert "error" in error_data["detail"]
-        assert "implementiert" in error_data["detail"]["error"]["message"].lower() or "not implemented" in error_data["detail"]["error"]["message"].lower()
+        assert (
+            "implementiert" in error_data["detail"]["error"]["message"].lower()
+            or "not implemented" in error_data["detail"]["error"]["message"].lower()
+        )
 
     def test_data_sources_endpoint_with_sample_data(self, client: TestClient, sample_data_sources):
         """Test data sources endpoint behavior with existing data sources in database."""
@@ -32,7 +35,10 @@ class TestDataSourcesEndpoint:
 
         assert response.status_code == 501
         error_data = response.json()
-        assert "implementiert" in error_data["detail"]["error"]["message"].lower() or "not implemented" in error_data["detail"]["error"]["message"].lower()
+        assert (
+            "implementiert" in error_data["detail"]["error"]["message"].lower()
+            or "not implemented" in error_data["detail"]["error"]["message"].lower()
+        )
 
     def test_data_sources_endpoint_response_structure(self, client: TestClient):
         """Test data sources endpoint response structure matches expected format."""
@@ -90,9 +96,9 @@ class TestDataSourcesEndpoint:
     def test_data_sources_endpoint_with_trailing_slash_variations(self, client: TestClient):
         """Test data sources endpoint with different URL formats."""
         urls = [
-            "/api/data-sources",      # No trailing slash
-            "/api/data-sources/",     # With trailing slash
-            "/api/data-sources//",    # Double trailing slash
+            "/api/data-sources",  # No trailing slash
+            "/api/data-sources/",  # With trailing slash
+            "/api/data-sources//",  # Double trailing slash
         ]
 
         for url in urls:
@@ -273,7 +279,9 @@ class TestFutureDataSourcesImplementation:
         assert data_source.id == "test-source"
         assert data_source.is_active is True
 
-    def test_data_sources_expected_future_response_structure(self, client: TestClient, sample_data_sources):
+    def test_data_sources_expected_future_response_structure(
+        self, client: TestClient, sample_data_sources
+    ):
         """Test expected response structure for future implementation."""
         # This test documents the expected future response structure
         # When implemented, the endpoint should return something like:
@@ -296,7 +304,7 @@ class TestFutureDataSourcesImplementation:
                 "healthy": "integer",
                 "unhealthy": "integer",
                 "unknown": "integer",
-            }
+            },
         }
 
         # Currently returns 501, but this documents future expectations
@@ -323,17 +331,19 @@ class TestFutureDataSourcesImplementation:
             # Currently not implemented
             assert response.status_code == 501
 
-    def test_data_sources_health_monitoring_preparation(self, client: TestClient, sample_data_sources):
+    def test_data_sources_health_monitoring_preparation(
+        self, client: TestClient, sample_data_sources
+    ):
         """Test preparation for health monitoring functionality."""
         # Verify sample data sources have health-related fields
         for source in sample_data_sources:
-            assert hasattr(source, 'is_active')
-            assert hasattr(source, 'url')
-            assert hasattr(source, 'type')
+            assert hasattr(source, "is_active")
+            assert hasattr(source, "url")
+            assert hasattr(source, "type")
 
             # These fields will be important for health monitoring
-            assert source.url.startswith('http')
-            assert source.type in ['wfs', 'overpass']
+            assert source.url.startswith("http")
+            assert source.type in ["wfs", "overpass"]
 
         # Currently endpoint is not implemented
         response = client.get("/api/data-sources/")

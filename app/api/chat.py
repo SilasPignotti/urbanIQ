@@ -82,7 +82,9 @@ async def submit_chat_message(
     background_tasks: BackgroundTasks,
     session: SessionDep,
     _settings: SettingsDep,
-    text: str = Form(..., min_length=5, max_length=500, description="Natural language geodata request"),
+    text: str = Form(
+        ..., min_length=5, max_length=500, description="Natural language geodata request"
+    ),
 ) -> ChatResponse:
     """
     Submit natural language geodata request for processing.
@@ -94,7 +96,7 @@ async def submit_chat_message(
     if not text.strip():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Text cannot be empty or whitespace only"
+            detail="Text cannot be empty or whitespace only",
         )
 
     text = text.strip()

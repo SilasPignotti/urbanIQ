@@ -47,9 +47,18 @@ class MockDistrictBoundariesConnector:
 
         # Return boundaries for all Berlin districts
         districts = [
-            "Charlottenburg-Wilmersdorf", "Friedrichshain-Kreuzberg", "Lichtenberg",
-            "Marzahn-Hellersdorf", "Mitte", "Neukölln", "Pankow", "Reinickendorf",
-            "Spandau", "Steglitz-Zehlendorf", "Tempelhof-Schöneberg", "Treptow-Köpenick"
+            "Charlottenburg-Wilmersdorf",
+            "Friedrichshain-Kreuzberg",
+            "Lichtenberg",
+            "Marzahn-Hellersdorf",
+            "Mitte",
+            "Neukölln",
+            "Pankow",
+            "Reinickendorf",
+            "Spandau",
+            "Steglitz-Zehlendorf",
+            "Tempelhof-Schöneberg",
+            "Treptow-Köpenick",
         ]
 
         all_boundaries = []
@@ -81,7 +90,7 @@ class MockBuildingsConnector:
     async def fetch_buildings(
         self,
         bbox: tuple[float, float, float, float],
-        district_boundary: gpd.GeoDataFrame | None = None
+        district_boundary: gpd.GeoDataFrame | None = None,
     ) -> gpd.GeoDataFrame:
         """Mock building data fetching with spatial filtering."""
         if self.scenario == "timeout":
@@ -92,8 +101,7 @@ class MockBuildingsConnector:
 
         if self.scenario == "empty":
             return gpd.GeoDataFrame(
-                columns=["height", "type", "year_built", "geometry"],
-                crs="EPSG:25833"
+                columns=["height", "type", "year_built", "geometry"], crs="EPSG:25833"
             )
 
         if self.scenario == "large_dataset":
@@ -101,14 +109,12 @@ class MockBuildingsConnector:
             return self.generator.generate_buildings_data(
                 district="Mitte",
                 count=5000,  # Large dataset
-                bbox=bbox
+                bbox=bbox,
             )
 
         # Success scenario - return realistic building data
         return self.generator.generate_buildings_data(
-            district="Pankow",
-            count=self.feature_count,
-            bbox=bbox
+            district="Pankow", count=self.feature_count, bbox=bbox
         )
 
     async def fetch_buildings_sample(self, max_features: int = 10) -> gpd.GeoDataFrame:
@@ -117,8 +123,7 @@ class MockBuildingsConnector:
             raise ConnectorError("Failed to fetch building sample")
 
         return self.generator.generate_buildings_data(
-            district="Pankow",
-            count=min(max_features, 10)
+            district="Pankow", count=min(max_features, 10)
         )
 
     async def test_connection(self) -> bool:
@@ -144,7 +149,7 @@ class MockOverpassConnector:
     async def fetch_transport_stops(
         self,
         bbox: tuple[float, float, float, float],
-        district_boundary: gpd.GeoDataFrame | None = None
+        district_boundary: gpd.GeoDataFrame | None = None,
     ) -> gpd.GeoDataFrame:
         """Mock transport stops fetching with rate limiting simulation."""
         self.request_count += 1
@@ -160,15 +165,12 @@ class MockOverpassConnector:
 
         if self.scenario == "empty":
             return gpd.GeoDataFrame(
-                columns=["name", "transport_type", "platform", "geometry"],
-                crs="EPSG:25833"
+                columns=["name", "transport_type", "platform", "geometry"], crs="EPSG:25833"
             )
 
         # Success scenario - return realistic transport stop data
         return self.generator.generate_transport_stops_data(
-            district="Pankow",
-            count=self.feature_count,
-            bbox=bbox
+            district="Pankow", count=self.feature_count, bbox=bbox
         )
 
     async def test_connection(self) -> bool:
@@ -238,11 +240,13 @@ def create_error_scenario_connectors() -> dict[str, Any]:
         "district_boundaries": MockDistrictBoundariesConnector("error"),
         "buildings": MockBuildingsConnector("timeout"),
         "transport_stops": MockOverpassConnector("rate_limit"),
-        "health_checker": MockServiceHealthChecker({
-            "district_boundaries": False,
-            "buildings": False,
-            "transport_stops": False,
-        }),
+        "health_checker": MockServiceHealthChecker(
+            {
+                "district_boundaries": False,
+                "buildings": False,
+                "transport_stops": False,
+            }
+        ),
     }
 
 

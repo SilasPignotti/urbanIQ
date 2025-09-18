@@ -37,7 +37,9 @@ class TestChatMessageEndpoint:
         # Verify German response message
         assert "verarbeitet" in data["message"].lower() or "erstellt" in data["message"].lower()
 
-    def test_chat_message_endpoint_with_english_request(self, client: TestClient, mock_external_services):
+    def test_chat_message_endpoint_with_english_request(
+        self, client: TestClient, mock_external_services
+    ):
         """Test chat endpoint with English language request."""
         request_data = {"text": "Mitte buildings for urban planning analysis"}
 
@@ -90,14 +92,14 @@ class TestChatMessageEndpoint:
     def test_chat_message_endpoint_invalid_json(self, client: TestClient):
         """Test chat endpoint with invalid JSON."""
         response = client.post(
-            "/api/chat/message",
-            data="invalid json",
-            headers={"Content-Type": "application/json"}
+            "/api/chat/message", data="invalid json", headers={"Content-Type": "application/json"}
         )
 
         assert response.status_code == 422
 
-    def test_chat_message_endpoint_special_characters(self, client: TestClient, mock_external_services):
+    def test_chat_message_endpoint_special_characters(
+        self, client: TestClient, mock_external_services
+    ):
         """Test chat endpoint with special characters and German umlauts."""
         request_data = {"text": "Kreuzberg Gebäude & ÖPNV für Verkehrsanalyse (Höchste Qualität)"}
 
@@ -160,7 +162,9 @@ class TestChatInputValidation:
 
         assert response.status_code == 422
 
-    def test_chat_message_validation_numeric_input(self, client: TestClient, mock_external_services):
+    def test_chat_message_validation_numeric_input(
+        self, client: TestClient, mock_external_services
+    ):
         """Test chat endpoint with numeric input."""
         request_data = {"text": "12345 Berlin coordinates 52.5200 13.4050"}
 
@@ -169,7 +173,9 @@ class TestChatInputValidation:
         # Should still process as it's valid text length
         assert response.status_code == 202
 
-    def test_chat_message_validation_boundary_length(self, client: TestClient, mock_external_services):
+    def test_chat_message_validation_boundary_length(
+        self, client: TestClient, mock_external_services
+    ):
         """Test chat endpoint with boundary length values."""
         # Test minimum length (5 characters)
         request_data = {"text": "12345"}
@@ -317,8 +323,7 @@ class TestChatPerformance:
     def test_chat_large_batch_requests(self, client: TestClient, mock_external_services):
         """Test handling of batch requests to chat endpoint."""
         requests_data = [
-            {"text": f"District {i} buildings analysis for planning"}
-            for i in range(20)
+            {"text": f"District {i} buildings analysis for planning"} for i in range(20)
         ]
 
         responses = []

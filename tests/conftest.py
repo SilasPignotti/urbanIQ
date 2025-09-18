@@ -182,8 +182,11 @@ def pankow_district_boundary() -> gpd.GeoDataFrame:
     """Create sample Pankow district boundary for testing."""
     # Simplified Pankow boundary polygon
     pankow_coords = [
-        (13.380, 52.540), (13.450, 52.540), (13.450, 52.600),
-        (13.380, 52.600), (13.380, 52.540)
+        (13.380, 52.540),
+        (13.450, 52.540),
+        (13.450, 52.600),
+        (13.380, 52.600),
+        (13.380, 52.540),
     ]
 
     boundary = Polygon(pankow_coords)
@@ -245,31 +248,28 @@ def mock_osm_response():
                     "name": "S Pankow",
                     "public_transport": "platform",
                     "railway": "platform",
-                    "transport": "s_bahn"
-                }
+                    "transport": "s_bahn",
+                },
             },
             {
                 "type": "node",
                 "id": 987654321,
                 "lat": 52.5581,
                 "lon": 13.4194,
-                "tags": {
-                    "name": "Pankow Kirche",
-                    "highway": "bus_stop",
-                    "transport": "bus"
-                }
-            }
-        ]
+                "tags": {"name": "Pankow Kirche", "highway": "bus_stop", "transport": "bus"},
+            },
+        ],
     }
 
 
 @pytest.fixture
 def mock_external_services():
     """Mock all external service dependencies for isolated testing."""
-    with patch("app.services.nlp_service.ChatGoogleGenerativeAI") as mock_gemini, \
-         patch("httpx.AsyncClient.get") as mock_http_get, \
-         patch("httpx.AsyncClient.post") as mock_http_post:
-
+    with (
+        patch("app.services.nlp_service.ChatGoogleGenerativeAI") as mock_gemini,
+        patch("httpx.AsyncClient.get") as mock_http_get,
+        patch("httpx.AsyncClient.post") as mock_http_post,
+    ):
         # Configure mock Gemini response
         mock_llm_instance = Mock()
         mock_llm_instance.invoke.return_value = Mock(
@@ -315,6 +315,7 @@ def temp_zip_file(temp_export_dir: Path) -> Path:
     zip_path = temp_export_dir / "test_package.zip"
     # Create a minimal ZIP file
     import zipfile
+
     with zipfile.ZipFile(zip_path, "w") as zf:
         zf.writestr("README.md", "Test geodata package")
         zf.writestr("data.geojson", '{"type": "FeatureCollection", "features": []}')
