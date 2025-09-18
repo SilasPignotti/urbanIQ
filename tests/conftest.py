@@ -79,6 +79,8 @@ def sample_job(db_session: Session) -> Job:
 @pytest.fixture
 def completed_job(db_session: Session) -> Job:
     """Create completed job record with package for testing."""
+    from datetime import datetime
+
     job = Job(
         id="completed-job-456",
         request_text="Charlottenburg buildings analysis",
@@ -87,6 +89,7 @@ def completed_job(db_session: Session) -> Job:
         status=JobStatus.COMPLETED,
         progress=100,
         error_message=None,
+        completed_at=datetime.utcnow(),
     )
     db_session.add(job)
     db_session.commit()
@@ -100,6 +103,11 @@ def completed_job(db_session: Session) -> Job:
         metadata_report="Test metadata report",
     )
     db_session.add(package)
+    db_session.commit()
+
+    # Link package to job
+    job.result_package_id = package.id
+    db_session.add(job)
     db_session.commit()
     db_session.refresh(job)
     return job
