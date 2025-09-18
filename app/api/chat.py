@@ -92,26 +92,19 @@ async def submit_chat_message(
     Creates a background job that processes the request through the complete
     service chain: NLP → Data → Processing → Metadata services.
     """
-    # Validate text input
-    if not text.strip():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Text cannot be empty or whitespace only",
-        )
-
-    text = text.strip()
+    text_content = text.strip()
 
     correlation_id = getattr(request.state, "correlation_id", "unknown")
     request_logger = logger.bind(
         correlation_id=correlation_id,
-        user_text=text[:100] + "..." if len(text) > 100 else text,
+        user_text=text_content[:100] + "..." if len(text_content) > 100 else text_content,
     )
 
     request_logger.info("Received chat message request")
 
     try:
         # Create job record
-        job = Job(request_text=text, status=JobStatus.PENDING, progress=0)
+        job = Job(request_text=text_content, status=JobStatus.PENDING, progress=0)
 
         session.add(job)
         session.commit()
@@ -124,7 +117,7 @@ async def submit_chat_message(
         background_tasks.add_task(
             process_geodata_request,
             job.id,
-            text,
+            text_content,
             lambda: session.__class__(bind=session.bind),  # Session factory
         )
 

@@ -19,7 +19,7 @@ class TestChatMessageEndpoint:
         """Test successful chat message processing with valid German request."""
         request_data = {"text": "Pankow Gebäude und ÖPNV-Haltestellen für Mobilitätsanalyse"}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 202
         data = response.json()
@@ -43,7 +43,7 @@ class TestChatMessageEndpoint:
         """Test chat endpoint with English language request."""
         request_data = {"text": "Mitte buildings for urban planning analysis"}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 202
         data = response.json()
@@ -54,7 +54,7 @@ class TestChatMessageEndpoint:
         """Test chat endpoint with too short request."""
         request_data = {"text": "Hi"}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 422
         error_data = response.json()
@@ -65,7 +65,7 @@ class TestChatMessageEndpoint:
         long_text = "a" * 501  # Exceeds 500 character limit
         request_data = {"text": long_text}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 422
         error_data = response.json()
@@ -75,7 +75,7 @@ class TestChatMessageEndpoint:
         """Test chat endpoint with empty request."""
         request_data = {"text": ""}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 422
 
@@ -83,7 +83,7 @@ class TestChatMessageEndpoint:
         """Test chat endpoint with missing text field."""
         request_data = {"message": "Pankow buildings"}  # Wrong field name
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 422
         error_data = response.json()
@@ -103,7 +103,7 @@ class TestChatMessageEndpoint:
         """Test chat endpoint with special characters and German umlauts."""
         request_data = {"text": "Kreuzberg Gebäude & ÖPNV für Verkehrsanalyse (Höchste Qualität)"}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 202
         data = response.json()
@@ -119,7 +119,7 @@ class TestChatMessageEndpoint:
 
         request_data = {"text": "Friedrichshain Gebäude für Stadtplanung"}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 202
         job_id = response.json()["job_id"]
@@ -138,7 +138,7 @@ class TestChatMessageEndpoint:
         # Send multiple requests quickly
         responses = []
         for _ in range(5):
-            response = client.post("/api/chat/message", json=request_data)
+            response = client.post("/api/chat/message", data=request_data)
             responses.append(response)
 
         # All should succeed
@@ -158,7 +158,7 @@ class TestChatInputValidation:
         """Test chat endpoint with whitespace-only request."""
         request_data = {"text": "   \n\t   "}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 422
 
@@ -168,7 +168,7 @@ class TestChatInputValidation:
         """Test chat endpoint with numeric input."""
         request_data = {"text": "12345 Berlin coordinates 52.5200 13.4050"}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         # Should still process as it's valid text length
         assert response.status_code == 202
@@ -179,13 +179,13 @@ class TestChatInputValidation:
         """Test chat endpoint with boundary length values."""
         # Test minimum length (5 characters)
         request_data = {"text": "12345"}
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
         assert response.status_code == 202
 
         # Test maximum length (500 characters)
         long_text = "Pankow " + "a" * 493  # Total 500 chars
         request_data = {"text": long_text}
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
         assert response.status_code == 202
 
 
@@ -206,7 +206,7 @@ class TestChatServiceIntegration:
         request_data = {"text": "Charlottenburg buildings for analysis"}
 
         with patch("app.api.chat_background.process_geodata_request_sync"):
-            response = client.post("/api/chat/message", json=request_data)
+            response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 202
         mock_nlp.assert_called_once_with("Charlottenburg buildings for analysis")
@@ -224,7 +224,7 @@ class TestChatServiceIntegration:
 
         request_data = {"text": "unclear request without specific location"}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 400
         error_data = response.json()
@@ -238,7 +238,7 @@ class TestChatServiceIntegration:
 
         request_data = {"text": "Spandau buildings analysis"}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 500
         error_data = response.json()
@@ -248,7 +248,7 @@ class TestChatServiceIntegration:
         """Test chat endpoint response headers."""
         request_data = {"text": "Tempelhof buildings for planning"}
 
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 202
         assert response.headers["content-type"] == "application/json"
@@ -262,7 +262,7 @@ class TestChatServiceIntegration:
         assert options_response.status_code in (200, 405)  # 405 if OPTIONS not explicitly handled
 
         # Test actual request
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
         assert response.status_code == 202
 
 
@@ -275,7 +275,7 @@ class TestChatErrorScenarios:
             mock_get_session.side_effect = Exception("Database connection failed")
 
             request_data = {"text": "Lichtenberg buildings"}
-            response = client.post("/api/chat/message", json=request_data)
+            response = client.post("/api/chat/message", data=request_data)
 
             assert response.status_code == 500
 
@@ -285,7 +285,7 @@ class TestChatErrorScenarios:
             mock_add_task.side_effect = Exception("Background task failed")
 
             request_data = {"text": "Steglitz-Zehlendorf transport analysis"}
-            response = client.post("/api/chat/message", json=request_data)
+            response = client.post("/api/chat/message", data=request_data)
 
             # Should still return success as job is created, background processing is separate
             assert response.status_code == 202
@@ -297,7 +297,7 @@ class TestChatErrorScenarios:
         large_request = large_request[:500]  # Truncate to max allowed length
 
         request_data = {"text": large_request}
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
 
         assert response.status_code == 202
         assert "job_id" in response.json()
@@ -313,7 +313,7 @@ class TestChatPerformance:
         request_data = {"text": "Marzahn-Hellersdorf comprehensive analysis"}
 
         start_time = time.time()
-        response = client.post("/api/chat/message", json=request_data)
+        response = client.post("/api/chat/message", data=request_data)
         response_time = time.time() - start_time
 
         assert response.status_code == 202
@@ -328,7 +328,7 @@ class TestChatPerformance:
 
         responses = []
         for request_data in requests_data:
-            response = client.post("/api/chat/message", json=request_data)
+            response = client.post("/api/chat/message", data=request_data)
             responses.append(response)
 
         # All should succeed
