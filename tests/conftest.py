@@ -19,6 +19,7 @@ from sqlmodel import Session, SQLModel, create_engine
 from app.database import get_session
 from app.main import app
 from app.models import DataSource, Job, JobStatus, Package
+from app.models.data_source import ConnectorType
 
 
 @pytest.fixture(scope="session")
@@ -127,18 +128,18 @@ def sample_data_sources(db_session: Session) -> list[DataSource]:
         DataSource(
             id="berlin-geoportal",
             name="Berlin Geoportal WFS",
-            type="wfs",
-            url="https://fbinter.stadt-berlin.de/fb/wfs/geometry/senstadt/re_gebaeude",
+            connector_type=ConnectorType.GEOPORTAL,
+            service_url="https://fbinter.stadt-berlin.de/fb/wfs/geometry/senstadt/re_gebaeude",
             description="Berlin building geometries from official WFS service",
-            is_active=True,
+            active=True,
         ),
         DataSource(
             id="openstreetmap",
             name="OpenStreetMap Overpass API",
-            type="overpass",
-            url="https://overpass-api.de/api/interpreter",
+            connector_type=ConnectorType.OSM,
+            service_url="https://overpass-api.de/api/interpreter",
             description="OpenStreetMap public transport stops via Overpass API",
-            is_active=True,
+            active=True,
         ),
     ]
     for source in sources:
@@ -266,16 +267,16 @@ def mock_osm_response():
 def mock_external_services():
     """Mock all external service dependencies for isolated testing."""
     with (
-        patch("app.services.nlp_service.ChatGoogleGenerativeAI") as mock_gemini,
+        patch("app.services.nlp_service.ChatOpenAI") as mock_openai,
         patch("httpx.AsyncClient.get") as mock_http_get,
         patch("httpx.AsyncClient.post") as mock_http_post,
     ):
-        # Configure mock Gemini response
+        # Configure mock OpenAI response
         mock_llm_instance = Mock()
         mock_llm_instance.invoke.return_value = Mock(
             content='{"bezirk": "Pankow", "datasets": ["gebaeude"], "confidence": 0.95}'
         )
-        mock_gemini.return_value = mock_llm_instance
+        mock_openai.return_value = mock_llm_instance
 
         # Configure mock HTTP responses
         mock_response = AsyncMock()
