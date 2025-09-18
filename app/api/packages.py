@@ -166,9 +166,8 @@ async def download_package(request: Request, package_id: str, session: SessionDe
         session.commit()
 
         # Generate filename for download
-        # Use package ID and timestamp for uniqueness
-        timestamp = package.created_at.strftime("%Y%m%d_%H%M%S")
-        filename = f"geodata_package_{timestamp}.zip"
+        # Use package ID for predictable, unique filename
+        filename = f"geodata_package_{package.id}.zip"
 
         request_logger.info(
             "Package download successful",

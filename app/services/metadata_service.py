@@ -12,8 +12,7 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from langchain.prompts import PromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
-from pydantic import SecretStr
+from langchain_openai import ChatOpenAI
 
 from app.config import settings
 
@@ -73,12 +72,12 @@ class MetadataService:
     """
     Service for generating LLM-powered metadata reports for geodata packages.
 
-    Creates professional, multilingual metadata reports using Google Gemini AI
+    Creates professional, multilingual metadata reports using OpenAI GPT
     integration with Jinja2 template system for consistent formatting.
     """
 
     def __init__(self) -> None:
-        """Initialize Metadata Service with Gemini AI and template engine."""
+        """Initialize Metadata Service with OpenAI and template engine."""
         logger.info("Initializing Metadata Service")
 
         # Initialize Jinja2 template engine
@@ -92,30 +91,23 @@ class MetadataService:
         # Add custom filters
         self.template_env.filters["number_format"] = self._format_number
 
-        # Initialize Gemini AI client if API key available
+        # Initialize OpenAI client if API key available
         self.llm = None
-        # Handle both SecretStr and string types (for testing compatibility)
-        api_key_value: str | None = None
-        if hasattr(settings.google_api_key, "get_secret_value"):
-            api_key_value = settings.google_api_key.get_secret_value()
-        else:
-            api_key_value = str(settings.google_api_key) if settings.google_api_key else None
 
-        if api_key_value:
+        if settings.openai_api_key:
             try:
-                self.llm = ChatGoogleGenerativeAI(
-                    model="gemini-1.5-pro",
+                self.llm = ChatOpenAI(
+                    model_name="gpt-4o",  # Better for creative report generation
                     temperature=0.3,  # Creative but consistent for report generation
-                    google_api_key=settings.google_api_key
-                    if hasattr(settings.google_api_key, "get_secret_value")
-                    else SecretStr(str(settings.google_api_key)),
+                    openai_api_key=settings.openai_api_key.get_secret_value(),  # type: ignore[arg-type]
                 )
-                logger.info("Gemini AI client initialized successfully")
+                logger.info("OpenAI client initialized successfully")
             except Exception as e:
-                logger.warning(f"Failed to initialize Gemini AI client: {e}")
+                logger.warning(f"Failed to initialize OpenAI client: {e}")
                 self.llm = None
         else:
-            logger.warning("Google API key not configured, LLM enhancement disabled")
+            logger.warning("OpenAI API key not configured, LLM enhancement disabled")
+            self.llm = None
 
     def create_metadata_report(
         self, datasets: list[dict[str, Any]], bezirk: str, request_info: dict[str, Any]
@@ -124,7 +116,7 @@ class MetadataService:
         Create comprehensive metadata report for geodata packages.
 
         Generates professional metadata reports with quality assessment,
-        usage recommendations, and licensing information using Gemini AI
+        usage recommendations, and licensing information using OpenAI GPT
         enhancement and Jinja2 templates.
 
         Args:

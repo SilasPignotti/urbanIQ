@@ -8,7 +8,7 @@ parses it via NLP service, creates background processing jobs, and returns job I
 from typing import Any
 
 import structlog
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
 
 from app.api.deps import SessionDep, SettingsDep
@@ -79,10 +79,12 @@ class ErrorResponse(BaseModel):
 )
 async def submit_chat_message(
     request: Request,
-    message: ChatMessage,
     background_tasks: BackgroundTasks,
     session: SessionDep,
     _settings: SettingsDep,
+    text: str = Form(
+        ..., min_length=5, max_length=500, description="Natural language geodata request"
+    ),
 ) -> ChatResponse:
     """
     Submit natural language geodata request for processing.
@@ -90,17 +92,19 @@ async def submit_chat_message(
     Creates a background job that processes the request through the complete
     service chain: NLP → Data → Processing → Metadata services.
     """
+    text_content = text.strip()
+
     correlation_id = getattr(request.state, "correlation_id", "unknown")
     request_logger = logger.bind(
         correlation_id=correlation_id,
-        user_text=message.text[:100] + "..." if len(message.text) > 100 else message.text,
+        user_text=text_content[:100] + "..." if len(text_content) > 100 else text_content,
     )
 
     request_logger.info("Received chat message request")
 
     try:
         # Create job record
-        job = Job(request_text=message.text, status=JobStatus.PENDING, progress=0)
+        job = Job(request_text=text_content, status=JobStatus.PENDING, progress=0)
 
         session.add(job)
         session.commit()
@@ -113,7 +117,7 @@ async def submit_chat_message(
         background_tasks.add_task(
             process_geodata_request,
             job.id,
-            message.text,
+            text_content,
             lambda: session.__class__(bind=session.bind),  # Session factory
         )
 

@@ -11,8 +11,8 @@ from typing import Any
 
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
-from pydantic import BaseModel, Field, SecretStr, field_validator
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field, field_validator
 
 from app.config import settings
 
@@ -128,32 +128,30 @@ class NLPService:
     """
     Natural Language Processing service for German geodata requests.
 
-    Uses Google Gemini AI to parse German text and extract structured
+    Uses OpenAI GPT to parse German text and extract structured
     information about Berlin districts and requested datasets.
     """
 
     def __init__(self) -> None:
-        """Initialize NLP service with Google GenAI client."""
+        """Initialize NLP service with OpenAI client."""
         self.confidence_threshold = 0.7
 
         # Handle both SecretStr and string types (for testing compatibility)
         api_key_value: str | None = None
-        if hasattr(settings.google_api_key, "get_secret_value"):
-            api_key_value = settings.google_api_key.get_secret_value()
+        if hasattr(settings.openai_api_key, "get_secret_value"):
+            api_key_value = settings.openai_api_key.get_secret_value()
         else:
-            api_key_value = str(settings.google_api_key) if settings.google_api_key else None
+            api_key_value = str(settings.openai_api_key) if settings.openai_api_key else None
 
         if not api_key_value:
             raise ValueError(
-                "Google API key not configured. Set GOOGLE_API_KEY environment variable."
+                "OpenAI API key not configured. Set OPENAI_API_KEY environment variable."
             )
 
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-pro",
+        self.llm = ChatOpenAI(
+            model_name="gpt-4o-mini",  # Cost-effective for structured parsing
             temperature=0.1,  # Low temperature for deterministic parsing
-            google_api_key=settings.google_api_key
-            if hasattr(settings.google_api_key, "get_secret_value")
-            else SecretStr(str(settings.google_api_key)),
+            openai_api_key=api_key_value,  # type: ignore[arg-type]
         )
 
         # Create parser for structured output

@@ -17,7 +17,7 @@ This file provides comprehensive guidance to Claude when working with the urbanI
 
 The system consists of four core services:
 
-1. **NLP Service**: Gemini-based natural language processing for user request parsing
+1. **NLP Service**: OpenAI GPT-based natural language processing for user request parsing
 2. **Data Service**: Orchestrates geodata acquisition from multiple sources (Berlin Geoportal, OpenStreetMap)
 3. **Processing Service**: Harmonizes geodata (CRS standardization, spatial clipping, schema normalization)
 4. **Metadata Service**: Generates professional metadata reports using LLM analysis
@@ -68,7 +68,8 @@ Avoid building functionality on speculation. Implement features only when they a
 **LLM-Integration**:
 
 - **LangChain**: Agent-Framework und Prompt-Management
-- **google-generativeai**: Google Gemini API Client
+- **langchain-openai**: OpenAI API Client
+- **openai**: OpenAI Python SDK
 
 **Web-Frontend**:
 
@@ -234,11 +235,11 @@ uv run pre-commit run --all-files
 
 ### API Key Setup
 
-The project requires a Google Gemini API key for LLM services. The key is stored as a GitHub secret and needs to be configured locally:
+The project requires an OpenAI API key for LLM services. The key needs to be configured locally:
 
-1. **For new branches**: Run `./scripts/setup-env.sh` to fetch the API key from GitHub secrets
-2. **GitHub CI**: Uses the `GOOGLE_API_KEY` secret automatically
-3. **Local testing**: The setup script updates your `.env` file with the real key
+1. **For new branches**: Run `./scripts/setup-env.sh` to set up your API key
+2. **GitHub CI**: Uses mock keys for testing
+3. **Local testing**: The setup script updates your `.env` file with your real key
 
 **Note**: The `.env` file is not committed to git, so you'll need to run the setup script each time you start a new branch.
 

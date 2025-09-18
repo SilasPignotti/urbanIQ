@@ -80,17 +80,26 @@ class Job(SQLModel, table=True):
 
     @field_validator("datasets")
     @classmethod
-    def validate_datasets(cls, v: str | None) -> str | None:
+    def validate_datasets(cls, v: str | list | None) -> str | None:
         """Validate datasets field contains valid JSON array."""
         if v is None:
             return v
-        try:
-            parsed = json.loads(v)
-            if not isinstance(parsed, list):
-                raise ValueError("datasets must be a JSON array")
-            return v
-        except json.JSONDecodeError as e:
-            raise ValueError(f"datasets must be valid JSON: {e}") from e
+
+        # Handle list input (convert to JSON string)
+        if isinstance(v, list):
+            return json.dumps(v)
+
+        # Handle string input (validate JSON)
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                if not isinstance(parsed, list):
+                    raise ValueError("datasets must be a JSON array")
+                return v
+            except json.JSONDecodeError as e:
+                raise ValueError(f"datasets must be valid JSON: {e}") from e
+
+        raise ValueError("datasets must be a list or JSON string")
 
     @field_validator("progress")
     @classmethod

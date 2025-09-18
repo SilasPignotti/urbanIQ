@@ -296,6 +296,31 @@ Create a PRP for "Production Features": Environment Configuration for Developmen
 
 **Dependencies:** All previous steps (production deployment of complete system)
 
+### Schritt 15: Comprehensive Test Suite Implementation
+
+**Claude Code Message:**
+
+```
+Implement comprehensive test suite for production readiness: Complete unit tests for all API endpoints, Integration tests for service interactions, End-to-end workflow tests, Performance testing suite, Error handling and edge case coverage, Test data generators for realistic scenarios, CI/CD pipeline optimization for full test coverage, and Mock service implementations for external dependencies.
+```
+
+**Deliverables:**
+
+- Complete unit test coverage for all API endpoints
+- Integration tests for service-to-service interactions
+- End-to-end workflow tests for complete user journeys
+- Performance testing suite with benchmarks
+- Comprehensive error handling and edge case tests
+- Test data generators for realistic testing scenarios
+- Mock implementations for external services (Geoportal, OSM)
+- Optimized CI/CD pipeline with full test coverage
+- Test documentation and maintenance guidelines
+- Automated test reporting and metrics
+
+**Dependencies:** Schritt 14 (requires production-ready system for comprehensive testing)
+
+**Note:** This step was deferred from earlier implementation phases to focus on MVP delivery. Essential tests (models, core services) remain in simplified CI pipeline for rapid development cycles.
+
 ## 📅 Recommended Timeline
 
 ### Week 1: Foundation (Schritte 1-3)

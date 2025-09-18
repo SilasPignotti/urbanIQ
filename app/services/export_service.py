@@ -208,8 +208,15 @@ class ExportService:
             filename = f"{dataset_type}{format_config['extension']}"
             output_path = output_dir / filename
 
+            # Filter geometry types for shapefile format
+            export_data = geodata
+            if format_name == "shapefile":
+                export_data = self._filter_geometry_types_for_shapefile(
+                    geodata, dataset_type, logger_instance
+                )
+
             # Export using GeoPandas
-            geodata.to_file(
+            export_data.to_file(
                 output_path,
                 driver=format_config["driver"],
                 encoding="utf-8",
@@ -219,7 +226,8 @@ class ExportService:
                 "Geodata exported",
                 dataset_type=dataset_type,
                 format=format_name,
-                features=len(geodata),
+                features=len(export_data),
+                original_features=len(geodata),
                 file=filename,
             )
 
@@ -233,6 +241,60 @@ class ExportService:
             raise FileFormatError(
                 f"Failed to export {dataset_type} as {format_name}: {str(e)}"
             ) from e
+
+    def _filter_geometry_types_for_shapefile(
+        self, geodata: gpd.GeoDataFrame, dataset_type: str, logger_instance: Any
+    ) -> gpd.GeoDataFrame:
+        """
+        Filter geodata to only include compatible geometry types for shapefile export.
+
+        Shapefiles require all features to have the same geometry type.
+        This method identifies the primary geometry type and filters out incompatible ones.
+        """
+        if geodata.empty:
+            return geodata
+
+        # Get geometry types for all features
+        geom_types = geodata.geometry.geom_type
+        type_counts = geom_types.value_counts()
+
+        logger_instance.info(
+            "Analyzing geometry types for shapefile export",
+            dataset_type=dataset_type,
+            geometry_types=dict(type_counts),
+        )
+
+        # Determine expected geometry type based on dataset type
+        expected_geometry_types = {
+            "gebaeude": ["Polygon", "MultiPolygon"],  # Buildings should be polygons
+            "bezirksgrenzen": ["Polygon", "MultiPolygon"],  # District boundaries should be polygons
+            "oepnv_haltestellen": ["Point", "MultiPoint"],  # Transit stops should be points
+        }
+
+        # Get expected types for this dataset, default to most common type
+        if dataset_type in expected_geometry_types:
+            allowed_types = expected_geometry_types[dataset_type]
+        else:
+            # Fall back to most common geometry type
+            most_common_type = type_counts.index[0]
+            allowed_types = [most_common_type]
+
+        # Filter to only include compatible geometry types
+        compatible_mask = geom_types.isin(allowed_types)
+        filtered_data = geodata[compatible_mask].copy()
+
+        filtered_count = len(geodata) - len(filtered_data)
+        if filtered_count > 0:
+            logger_instance.warning(
+                "Filtered incompatible geometries for shapefile export",
+                dataset_type=dataset_type,
+                filtered_count=filtered_count,
+                allowed_types=allowed_types,
+                total_features=len(geodata),
+                remaining_features=len(filtered_data),
+            )
+
+        return filtered_data
 
     def _create_documentation_files(
         self,
