@@ -295,7 +295,7 @@ def mock_external_services():
         mock_http_post.return_value = mock_response
 
         yield {
-            "gemini": mock_gemini,
+            "openai": mock_openai,
             "http_get": mock_http_get,
             "http_post": mock_http_post,
         }

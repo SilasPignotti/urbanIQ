@@ -32,7 +32,10 @@ class TestMetadataServiceInitialization:
     def test_service_initialization_with_api_key(self):
         """Test service initialization with valid OpenAI API key."""
         with patch("app.services.metadata_service.settings") as mock_settings:
-            mock_settings.openai_api_key = "test-api-key"
+            from pydantic import SecretStr
+
+            mock_api_key = SecretStr("test-api-key")
+            mock_settings.openai_api_key = mock_api_key
 
             with patch("app.services.metadata_service.ChatOpenAI") as mock_llm:
                 service = MetadataService()
