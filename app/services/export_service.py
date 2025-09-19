@@ -242,6 +242,40 @@ class ExportService:
                 f"Failed to export {dataset_type} as {format_name}: {str(e)}"
             ) from e
 
+    def _convert_geometry_collections(
+        self, geodata: gpd.GeoDataFrame, logger_instance: Any
+    ) -> gpd.GeoDataFrame:
+        """
+        Convert GeometryCollections to their primary geometry type.
+
+        GeometryCollections are not supported in shapefiles. This method extracts
+        the largest/most relevant geometry from each collection.
+        """
+        from shapely.geometry import GeometryCollection
+
+        # Check if we have any GeometryCollections
+        has_collections = geodata.geometry.geom_type == "GeometryCollection"
+
+        if not has_collections.any():
+            return geodata
+
+        logger_instance.info(
+            f"Converting {has_collections.sum()} GeometryCollections for shapefile compatibility"
+        )
+
+        # Create a copy to avoid modifying the original
+        converted_data = geodata.copy()
+
+        # Convert each GeometryCollection
+        for idx in converted_data[has_collections].index:
+            geom = converted_data.loc[idx, "geometry"]
+            if isinstance(geom, GeometryCollection) and len(geom.geoms) > 0:
+                # Extract the largest geometry by area (for polygons) or length (for lines)
+                primary_geom = max(geom.geoms, key=lambda g: getattr(g, 'area', 0) or getattr(g, 'length', 0))
+                converted_data.loc[idx, "geometry"] = primary_geom
+
+        return converted_data
+
     def _filter_geometry_types_for_shapefile(
         self, geodata: gpd.GeoDataFrame, dataset_type: str, logger_instance: Any
     ) -> gpd.GeoDataFrame:
@@ -253,6 +287,9 @@ class ExportService:
         """
         if geodata.empty:
             return geodata
+
+        # Handle GeometryCollections by extracting primary geometry types
+        geodata = self._convert_geometry_collections(geodata, logger_instance)
 
         # Get geometry types for all features
         geom_types = geodata.geometry.geom_type
@@ -269,6 +306,11 @@ class ExportService:
             "gebaeude": ["Polygon", "MultiPolygon"],  # Buildings should be polygons
             "bezirksgrenzen": ["Polygon", "MultiPolygon"],  # District boundaries should be polygons
             "oepnv_haltestellen": ["Point", "MultiPoint"],  # Transit stops should be points
+            "ortsteilgrenzen": ["Polygon", "MultiPolygon"],  # District part boundaries should be polygons
+            "radverkehrsnetz": ["LineString", "MultiLineString"],  # Cycling network should be lines
+            "strassennetz": ["LineString", "MultiLineString"],  # Street network should be lines
+            "einwohnerdichte": ["Polygon", "MultiPolygon"],  # Population density should be polygons
+            "geschosszahl": ["Polygon", "MultiPolygon"],  # Building floors should be polygons
         }
 
         # Get expected types for this dataset, default to most common type
