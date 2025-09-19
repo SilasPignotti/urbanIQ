@@ -271,7 +271,9 @@ class ExportService:
             geom = converted_data.loc[idx, "geometry"]
             if isinstance(geom, GeometryCollection) and len(geom.geoms) > 0:
                 # Extract the largest geometry by area (for polygons) or length (for lines)
-                primary_geom = max(geom.geoms, key=lambda g: getattr(g, 'area', 0) or getattr(g, 'length', 0))
+                primary_geom = max(
+                    geom.geoms, key=lambda g: getattr(g, "area", 0) or getattr(g, "length", 0)
+                )
                 converted_data.loc[idx, "geometry"] = primary_geom
 
         return converted_data
@@ -306,7 +308,10 @@ class ExportService:
             "gebaeude": ["Polygon", "MultiPolygon"],  # Buildings should be polygons
             "bezirksgrenzen": ["Polygon", "MultiPolygon"],  # District boundaries should be polygons
             "oepnv_haltestellen": ["Point", "MultiPoint"],  # Transit stops should be points
-            "ortsteilgrenzen": ["Polygon", "MultiPolygon"],  # District part boundaries should be polygons
+            "ortsteilgrenzen": [
+                "Polygon",
+                "MultiPolygon",
+            ],  # District part boundaries should be polygons
             "radverkehrsnetz": ["LineString", "MultiLineString"],  # Cycling network should be lines
             "strassennetz": ["LineString", "MultiLineString"],  # Street network should be lines
             "einwohnerdichte": ["Polygon", "MultiPolygon"],  # Population density should be polygons

@@ -155,9 +155,12 @@ class TestCyclingNetworkConnector:
     @pytest.mark.asyncio
     async def test_fetch_cycling_network_service_error(self, connector, sample_district_boundary):
         """Test handling of service errors."""
-        with patch.object(
-            connector, "_get_text", side_effect=ServiceUnavailableError("Service down")
-        ), pytest.raises(ServiceUnavailableError):
+        with (
+            patch.object(
+                connector, "_get_text", side_effect=ServiceUnavailableError("Service down")
+            ),
+            pytest.raises(ServiceUnavailableError),
+        ):
             await connector.fetch_cycling_network(sample_district_boundary)
 
     def test_create_bbox_filter(self, connector, sample_district_boundary):
@@ -351,9 +354,10 @@ class TestOrtsteileBoundariesConnector:
         self, connector, sample_district_boundary, sample_ortsteile_geojson
     ):
         """Test successful Ortsteile boundaries fetching."""
-        with patch.object(
-            connector, "_get_text", return_value=json.dumps(sample_ortsteile_geojson)
-        ), patch("geopandas.clip") as mock_clip:
+        with (
+            patch.object(connector, "_get_text", return_value=json.dumps(sample_ortsteile_geojson)),
+            patch("geopandas.clip") as mock_clip,
+        ):
             mock_gdf = gpd.read_file(json.dumps(sample_ortsteile_geojson), driver="GeoJSON")
             mock_gdf = mock_gdf.to_crs("EPSG:25833")
             mock_clip.return_value = mock_gdf

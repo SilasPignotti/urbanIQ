@@ -116,9 +116,12 @@ class TestPopulationDensityConnector:
         self, connector, sample_district_boundary, sample_population_geojson
     ):
         """Test successful population density data fetching."""
-        with patch.object(
-            connector, "_get_text", return_value=json.dumps(sample_population_geojson)
-        ), patch("geopandas.clip") as mock_clip:
+        with (
+            patch.object(
+                connector, "_get_text", return_value=json.dumps(sample_population_geojson)
+            ),
+            patch("geopandas.clip") as mock_clip,
+        ):
             mock_gdf = gpd.read_file(json.dumps(sample_population_geojson), driver="GeoJSON")
             mock_gdf = mock_gdf.to_crs("EPSG:25833")
             mock_clip.return_value = mock_gdf
@@ -158,9 +161,12 @@ class TestPopulationDensityConnector:
         self, connector, sample_district_boundary
     ):
         """Test handling of service errors."""
-        with patch.object(
-            connector, "_get_text", side_effect=ServiceUnavailableError("Service down")
-        ), pytest.raises(ServiceUnavailableError):
+        with (
+            patch.object(
+                connector, "_get_text", side_effect=ServiceUnavailableError("Service down")
+            ),
+            pytest.raises(ServiceUnavailableError),
+        ):
             await connector.fetch_population_density(sample_district_boundary)
 
     def test_create_bbox_filter(self, connector, sample_district_boundary):
@@ -381,9 +387,12 @@ class TestBuildingFloorsConnector:
     @pytest.mark.asyncio
     async def test_fetch_floor_layer_service_error(self, connector, sample_district_boundary):
         """Test handling of service errors in floor layer fetching."""
-        with patch.object(
-            connector, "_get_text", side_effect=ServiceUnavailableError("Service down")
-        ), pytest.raises(ServiceUnavailableError):
+        with (
+            patch.object(
+                connector, "_get_text", side_effect=ServiceUnavailableError("Service down")
+            ),
+            pytest.raises(ServiceUnavailableError),
+        ):
             await connector.fetch_specific_floor_range(sample_district_boundary, "7_to_10")
 
     def test_floor_layers_mapping(self, connector):

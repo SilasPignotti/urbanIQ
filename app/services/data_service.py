@@ -452,7 +452,16 @@ class DataService:
         results = await asyncio.gather(*health_tasks, return_exceptions=True)
 
         health_status = {}
-        connector_names = ["district", "buildings", "osm", "cycling", "street", "ortsteile", "population", "floors"]
+        connector_names = [
+            "district",
+            "buildings",
+            "osm",
+            "cycling",
+            "street",
+            "ortsteile",
+            "population",
+            "floors",
+        ]
 
         for i, result in enumerate(results):
             connector_name = connector_names[i]
