@@ -2,160 +2,322 @@
 
 {% block title %}urbanIQ Berlin - Geodaten-Assistent{% endblock %}
 
+{% block head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="" />
+{% endblock %}
+
 {% block content %}
-<!-- Welcome Section -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-  <div class="text-center">
-    <h2 class="text-2xl font-bold text-gray-900 mb-3">
-      Willkommen beim Geodaten-Assistenten
+<!-- Hero Section -->
+<div class="bg-gradient-to-br from-urban-blue-50 via-white to-urban-blue-50 rounded-2xl shadow-sm border border-urban-blue-100 py-12 px-8 mb-8">
+  <div class="text-center max-w-4xl mx-auto flex flex-col justify-center min-h-[200px]">
+    <div class="flex justify-center mb-8">
+      <div class="w-20 h-20 bg-urban-blue-600 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+    </div>
+    <h2 class="text-4xl font-bold text-gray-900 mb-6 tracking-tight">
+      Geodaten für Berlin in Sekunden
     </h2>
-    <p class="text-gray-600 max-w-2xl mx-auto">
-      Beschreiben Sie Ihre Geodaten-Anfrage in natürlicher Sprache.
-      Unser System aggregiert automatisch Daten aus dem Berlin Geoportal und OpenStreetMap
-      für Ihre Stadtplanungsanalysen.
+    <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+      Einfach beschreiben, was Sie brauchen. Wir sammeln automatisch die passenden Geodaten
+      aus Berlin Geoportal und OpenStreetMap - bereit für Ihre Analyse.
     </p>
   </div>
 </div>
 
-<!-- Chat Input Form -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-  <form
-    hx-post="/api/chat/message"
-    hx-target="#chat-result"
-    hx-indicator="#form-loading"
-    hx-swap="innerHTML"
-    class="space-y-4"
-    role="form"
-    aria-label="Geodaten-Anfrage Formular"
-  >
-    <div>
-      <label for="geodata-request" class="block text-sm font-medium text-gray-700 mb-2">
-        Ihre Geodaten-Anfrage
-      </label>
-      <div class="relative">
-        <textarea
-          id="geodata-request"
-          name="text"
-          rows="3"
-          class="input-field w-full resize-none"
-          placeholder="z.B.: Pankow Gebäude und ÖPNV-Haltestellen für Mobilitätsanalyse"
-          aria-describedby="request-help"
-          required
-          minlength="5"
-          maxlength="500"
-        ></textarea>
-        <div class="absolute bottom-2 right-2 text-xs text-gray-400" id="char-counter">
-          0/500
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
+
+  <!-- Input Form Section -->
+  <div class="lg:col-span-3">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-10 h-10 bg-urban-blue-100 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-urban-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold text-gray-900">Was brauchen Sie?</h3>
+          <p class="text-sm text-gray-500">Beschreiben Sie Ihre Anfrage in einem Satz</p>
         </div>
       </div>
-      <p id="request-help" class="mt-1 text-sm text-gray-500">
-        Beschreiben Sie, welche Geodaten Sie für welchen Berliner Bezirk benötigen.
-        Beispiele: Gebäude, ÖPNV-Haltestellen, Bezirksgrenzen.
-      </p>
-    </div>
 
-    <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-      <button
-        type="submit"
-        class="btn-primary w-full sm:w-auto order-2 sm:order-1"
-        aria-describedby="submit-help"
+      <form
+        hx-post="/api/chat/message"
+        hx-target="#chat-result"
+        hx-indicator="#form-loading"
+        hx-swap="innerHTML"
+        class="space-y-6"
+        role="form"
+        aria-label="Geodaten-Anfrage Formular"
       >
-        <span class="flex items-center justify-center space-x-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-          </svg>
-          <span>Geodaten abfragen</span>
-        </span>
-      </button>
+        <div class="space-y-3">
+          <label for="geodata-request" class="block text-sm font-medium text-gray-700">
+            Ihre Anfrage
+          </label>
+          <div class="relative">
+            <textarea
+              id="geodata-request"
+              name="text"
+              rows="4"
+              class="input-field w-full resize-none text-base"
+              placeholder="z.B.: Ich brauche alle Gebäude und U-Bahn-Stationen in Mitte für eine Erreichbarkeitsanalyse"
+              aria-describedby="request-help"
+              required
+              minlength="5"
+              maxlength="500"
+            ></textarea>
+            <div class="absolute bottom-3 right-3 text-xs text-gray-400 bg-white px-2 py-1 rounded" id="char-counter">
+              0/500
+            </div>
+          </div>
+          <p id="request-help" class="text-sm text-gray-500">
+            Nennen Sie den Bezirk und welche Daten Sie benötigen - wir finden automatisch die passenden Quellen.
+          </p>
+        </div>
 
-      <div class="text-sm text-gray-500 order-1 sm:order-2">
-        <p id="submit-help">
-          <span class="inline-flex items-center space-x-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        <div class="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+          <button
+            type="submit"
+            class="btn-primary w-full sm:w-auto flex items-center justify-center space-x-2 text-base py-4 px-8"
+            aria-describedby="submit-help"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
-            <span>Verarbeitung dauert 30-60 Sekunden</span>
-          </span>
-        </p>
-      </div>
-    </div>
+            <span>Analyse starten</span>
+          </button>
 
-    <!-- Form Loading Indicator -->
-    <div id="form-loading" class="htmx-indicator">
-      <div class="flex items-center justify-center space-x-2 text-urban-blue-600 py-2">
-        <div class="animate-spin h-4 w-4 border-2 border-urban-blue-600 border-t-transparent rounded-full"></div>
-        <span class="text-sm font-medium">Anfrage wird übermittelt...</span>
+          <div class="text-sm text-gray-500">
+            <p id="submit-help" class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-urban-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Dauert ca. 30-60 Sekunden</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Form Loading Indicator -->
+        <div id="form-loading" class="htmx-indicator">
+          <div class="bg-urban-blue-50 border border-urban-blue-200 rounded-lg p-4">
+            <div class="flex items-center space-x-3 text-urban-blue-700">
+              <div class="animate-spin h-5 w-5 border-2 border-urban-blue-600 border-t-transparent rounded-full"></div>
+              <span class="font-medium">Sammle Geodaten...</span>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Map Section -->
+  <div class="lg:col-span-2">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-full">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-8 h-8 bg-urban-green-100 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-urban-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">Datenvorschau</h3>
+        </div>
+      </div>
+
+      <!-- Map Container -->
+      <div id="berlin-map" class="w-full h-64 lg:h-96 xl:h-[450px] rounded-lg border border-gray-200 overflow-hidden relative">
+        <!-- Map will be initialized here -->
+        <!-- Source credits will be added via JavaScript to map corner -->
       </div>
     </div>
-  </form>
+  </div>
+
 </div>
 
 <!-- Results Container -->
-<div id="chat-result" role="region" aria-label="Verarbeitungsergebnisse" aria-live="polite">
+<div id="chat-result" role="region" aria-label="Verarbeitungsergebnisse" aria-live="polite" class="mb-8">
   <!-- Dynamic content will be inserted here via HTMX -->
 </div>
 
 <!-- Example Queries -->
-<div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-  <h3 class="text-lg font-semibold text-gray-900 mb-4">Beispiel-Anfragen</h3>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="bg-white rounded-lg p-4 border border-gray-200">
-      <h4 class="font-medium text-gray-900 mb-2">Mobilitätsanalyse</h4>
-      <p class="text-sm text-gray-600 mb-3">
-        "Pankow Gebäude und ÖPNV-Haltestellen für Mobilitätsanalyse"
-      </p>
-      <button
-        class="example-query text-xs text-urban-blue-600 hover:text-urban-blue-700 font-medium"
-        data-query="Pankow Gebäude und ÖPNV-Haltestellen für Mobilitätsanalyse"
-      >
-        Beispiel verwenden →
-      </button>
+<div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
+  <div class="text-center mb-8">
+    <h3 class="text-2xl font-bold text-gray-900 mb-2">Schnellstart</h3>
+    <p class="text-gray-600">Klicken Sie auf ein Beispiel, um sofort loszulegen</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+    <!-- Mobility Analysis -->
+    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-200 hover:scale-105 group cursor-pointer h-full">
+      <div class="flex flex-col items-center text-center h-full">
+        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center group-hover:bg-blue-200 transition-colors mb-4">
+          <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+          </svg>
+        </div>
+        <div class="flex-1 flex flex-col">
+          <h4 class="font-semibold text-gray-900 mb-2">Mobilität</h4>
+          <p class="text-sm text-gray-600 mb-4 leading-relaxed flex-1">
+            Gebäude und ÖPNV-Haltestellen in Pankow für Erreichbarkeitsanalyse
+          </p>
+          <button
+            class="example-query text-sm text-blue-600 hover:text-blue-700 font-medium group-hover:underline transition-colors mt-auto"
+            data-query="Gebäude und ÖPNV-Haltestellen in Pankow für Erreichbarkeitsanalyse"
+          >
+            Beispiel verwenden →
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="bg-white rounded-lg p-4 border border-gray-200">
-      <h4 class="font-medium text-gray-900 mb-2">Bezirksanalyse</h4>
-      <p class="text-sm text-gray-600 mb-3">
-        "Mitte Grunddaten mit Bezirksgrenzen und Gebäuden"
-      </p>
-      <button
-        class="example-query text-xs text-urban-blue-600 hover:text-urban-blue-700 font-medium"
-        data-query="Mitte Grunddaten mit Bezirksgrenzen und Gebäuden"
-      >
-        Beispiel verwenden →
-      </button>
+    <!-- District Analysis -->
+    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-200 hover:scale-105 group cursor-pointer h-full">
+      <div class="flex flex-col items-center text-center h-full">
+        <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center group-hover:bg-green-200 transition-colors mb-4">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+        <div class="flex-1 flex flex-col">
+          <h4 class="font-semibold text-gray-900 mb-2">Bezirksdaten</h4>
+          <p class="text-sm text-gray-600 mb-4 leading-relaxed flex-1">
+            Bezirksgrenzen und Gebäudedaten in Mitte für Strukturanalyse
+          </p>
+          <button
+            class="example-query text-sm text-green-600 hover:text-green-700 font-medium group-hover:underline transition-colors mt-auto"
+            data-query="Bezirksgrenzen und Gebäudedaten in Mitte für Strukturanalyse"
+          >
+            Beispiel verwenden →
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="bg-white rounded-lg p-4 border border-gray-200">
-      <h4 class="font-medium text-gray-900 mb-2">ÖPNV-Analyse</h4>
-      <p class="text-sm text-gray-600 mb-3">
-        "Friedrichshain-Kreuzberg ÖPNV-Haltestellen für Verkehrsplanung"
-      </p>
-      <button
-        class="example-query text-xs text-urban-blue-600 hover:text-urban-blue-700 font-medium"
-        data-query="Friedrichshain-Kreuzberg ÖPNV-Haltestellen für Verkehrsplanung"
-      >
-        Beispiel verwenden →
-      </button>
+    <!-- Transit Analysis -->
+    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-200 hover:scale-105 group cursor-pointer h-full">
+      <div class="flex flex-col items-center text-center h-full">
+        <div class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center group-hover:bg-orange-200 transition-colors mb-4">
+          <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"/>
+          </svg>
+        </div>
+        <div class="flex-1 flex flex-col">
+          <h4 class="font-semibold text-gray-900 mb-2">ÖPNV</h4>
+          <p class="text-sm text-gray-600 mb-4 leading-relaxed flex-1">
+            U-Bahn und Bus-Haltestellen in Kreuzberg für Verkehrsplanung
+          </p>
+          <button
+            class="example-query text-sm text-orange-600 hover:text-orange-700 font-medium group-hover:underline transition-colors mt-auto"
+            data-query="U-Bahn und Bus-Haltestellen in Kreuzberg für Verkehrsplanung"
+          >
+            Beispiel verwenden →
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="bg-white rounded-lg p-4 border border-gray-200">
-      <h4 class="font-medium text-gray-900 mb-2">Stadtentwicklung</h4>
-      <p class="text-sm text-gray-600 mb-3">
-        "Charlottenburg-Wilmersdorf Gebäude für Stadtentwicklungsplanung"
-      </p>
-      <button
-        class="example-query text-xs text-urban-blue-600 hover:text-urban-blue-700 font-medium"
-        data-query="Charlottenburg-Wilmersdorf Gebäude für Stadtentwicklungsplanung"
-      >
-        Beispiel verwenden →
-      </button>
+    <!-- Urban Development -->
+    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-200 hover:scale-105 group cursor-pointer h-full">
+      <div class="flex flex-col items-center text-center h-full">
+        <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center group-hover:bg-purple-200 transition-colors mb-4">
+          <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+        <div class="flex-1 flex flex-col">
+          <h4 class="font-semibold text-gray-900 mb-2">Stadtentwicklung</h4>
+          <p class="text-sm text-gray-600 mb-4 leading-relaxed flex-1">
+            Alle Gebäude in Charlottenburg für Entwicklungsplanung
+          </p>
+          <button
+            class="example-query text-sm text-purple-600 hover:text-purple-700 font-medium group-hover:underline transition-colors mt-auto"
+            data-query="Alle Gebäude in Charlottenburg für Entwicklungsplanung"
+          >
+            Beispiel verwenden →
+          </button>
+        </div>
+      </div>
     </div>
+
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
 <script>
+// Initialize Berlin map
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize map centered on Berlin
+  const map = L.map('berlin-map', {
+    zoomControl: false,
+    attributionControl: false
+  }).setView([52.5200, 13.4050], 10);
+
+  // Add OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: ''
+  }).addTo(map);
+
+  // Add custom attribution control in bottom-right corner
+  const attributionControl = L.control.attribution({
+    position: 'bottomright',
+    prefix: false
+  });
+
+  attributionControl.addAttribution('<span style="font-size: 10px; color: #6b7280; font-style: italic;">Berlin Geoportal · OpenStreetMap</span>');
+  attributionControl.addTo(map);
+
+  // No marker needed - just show the map overview
+
+  // Add some Berlin district boundaries (simplified)
+  const berlinBounds = [
+    [52.3379, 13.0883], // Southwest
+    [52.6755, 13.7611]  // Northeast
+  ];
+
+  // Highlight Berlin area
+  L.rectangle(berlinBounds, {
+    color: '#2563eb',
+    weight: 2,
+    opacity: 0.3,
+    fillColor: '#3b82f6',
+    fillOpacity: 0.1
+  }).addTo(map);
+
+  // Disable interaction for a cleaner look
+  map.dragging.disable();
+  map.touchZoom.disable();
+  map.doubleClickZoom.disable();
+  map.scrollWheelZoom.disable();
+  map.boxZoom.disable();
+  map.keyboard.disable();
+});
+
 // Character counter for textarea
 document.addEventListener('DOMContentLoaded', function() {
   const textarea = document.getElementById('geodata-request');
@@ -168,11 +330,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Visual feedback for character limit
       if (length > 450) {
-        counter.classList.add('text-urban-red-600');
-        counter.classList.remove('text-gray-400');
+        counter.classList.add('text-urban-red-600', 'bg-urban-red-50');
+        counter.classList.remove('text-gray-400', 'bg-white');
       } else {
-        counter.classList.remove('text-urban-red-600');
-        counter.classList.add('text-gray-400');
+        counter.classList.remove('text-urban-red-600', 'bg-urban-red-50');
+        counter.classList.add('text-gray-400', 'bg-white');
       }
     }
 
@@ -181,53 +343,109 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Example query handlers
+// Enhanced example query handlers with smooth animations
 document.addEventListener('DOMContentLoaded', function() {
-  const exampleButtons = document.querySelectorAll('.example-query');
-  const textarea = document.getElementById('geodata-request');
+  const exampleCards = document.querySelectorAll('.example-query').forEach(button => {
+    const card = button.closest('.group');
 
-  exampleButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const query = this.getAttribute('data-query');
+    card.addEventListener('click', function() {
+      const query = button.getAttribute('data-query');
+      const textarea = document.getElementById('geodata-request');
+
       if (textarea && query) {
+        // Add visual feedback
+        card.classList.add('scale-95');
+        setTimeout(() => card.classList.remove('scale-95'), 150);
+
+        // Set the query
         textarea.value = query;
-        textarea.focus();
 
         // Trigger character counter update
         const event = new Event('input', { bubbles: true });
         textarea.dispatchEvent(event);
 
-        // Scroll to form
-        textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Smooth scroll to form with offset
+        const formSection = textarea.closest('.lg\\:col-span-2');
+        if (formSection) {
+          formSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+
+        // Focus and highlight textarea
+        setTimeout(() => {
+          textarea.focus();
+          textarea.select();
+        }, 500);
       }
     });
   });
 });
 
-// Form validation enhancement
+// Enhanced form validation with better UX
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.querySelector('form[hx-post="/api/chat/message"]');
   const textarea = document.getElementById('geodata-request');
+  const submitButton = form.querySelector('button[type="submit"]');
 
-  if (form && textarea) {
+  if (form && textarea && submitButton) {
+    // Real-time validation feedback
+    textarea.addEventListener('input', function() {
+      const text = this.value.trim();
+      const isValid = text.length >= 5 && text.length <= 500;
+
+      if (isValid) {
+        submitButton.disabled = false;
+        submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        submitButton.disabled = true;
+        submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    });
+
+    // Initial validation
+    textarea.dispatchEvent(new Event('input'));
+
+    // Form submission with better error handling
     form.addEventListener('submit', function(e) {
       const text = textarea.value.trim();
 
       if (text.length < 5) {
         e.preventDefault();
-        alert('Bitte geben Sie eine aussagekräftige Anfrage mit mindestens 5 Zeichen ein.');
         textarea.focus();
+        textarea.classList.add('border-urban-red-500', 'ring-urban-red-500');
+        setTimeout(() => {
+          textarea.classList.remove('border-urban-red-500', 'ring-urban-red-500');
+        }, 2000);
         return;
       }
 
       if (text.length > 500) {
         e.preventDefault();
-        alert('Ihre Anfrage ist zu lang. Bitte beschränken Sie sich auf maximal 500 Zeichen.');
         textarea.focus();
+        textarea.classList.add('border-urban-red-500', 'ring-urban-red-500');
+        setTimeout(() => {
+          textarea.classList.remove('border-urban-red-500', 'ring-urban-red-500');
+        }, 2000);
         return;
       }
     });
   }
+});
+
+// Add smooth scroll behavior to all internal links
+document.addEventListener('DOMContentLoaded', function() {
+  // Enhance button hover effects
+  document.querySelectorAll('.btn-primary').forEach(button => {
+    button.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-1px)';
+    });
+
+    button.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+    });
+  });
 });
 </script>
 {% endblock %}
