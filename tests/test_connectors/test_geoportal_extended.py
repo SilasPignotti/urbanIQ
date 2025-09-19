@@ -140,8 +140,10 @@ class TestCyclingNetworkConnector:
         self, connector, sample_district_boundary, sample_cycling_geojson
     ):
         """Test successful long-distance cycling routes fetching."""
-        with patch.object(connector, "_get_text", return_value=json.dumps(sample_cycling_geojson)):
-            with patch("geopandas.clip") as mock_clip:
+        with (
+            patch.object(connector, "_get_text", return_value=json.dumps(sample_cycling_geojson)),
+            patch("geopandas.clip") as mock_clip,
+        ):
                 mock_gdf = gpd.read_file(json.dumps(sample_cycling_geojson), driver="GeoJSON")
                 mock_gdf = mock_gdf.to_crs("EPSG:25833")
                 mock_clip.return_value = mock_gdf
@@ -250,8 +252,10 @@ class TestStreetNetworkConnector:
         self, connector, sample_district_boundary, sample_streets_geojson
     ):
         """Test successful street segments fetching."""
-        with patch.object(connector, "_get_text", return_value=json.dumps(sample_streets_geojson)):
-            with patch("geopandas.clip") as mock_clip:
+        with (
+            patch.object(connector, "_get_text", return_value=json.dumps(sample_streets_geojson)),
+            patch("geopandas.clip") as mock_clip,
+        ):
                 mock_gdf = gpd.read_file(json.dumps(sample_streets_geojson), driver="GeoJSON")
                 mock_gdf = mock_gdf.to_crs("EPSG:25833")
                 mock_clip.return_value = mock_gdf
@@ -268,8 +272,10 @@ class TestStreetNetworkConnector:
         self, connector, sample_district_boundary, sample_points_geojson
     ):
         """Test successful connection points fetching."""
-        with patch.object(connector, "_get_text", return_value=json.dumps(sample_points_geojson)):
-            with patch("geopandas.clip") as mock_clip:
+        with (
+            patch.object(connector, "_get_text", return_value=json.dumps(sample_points_geojson)),
+            patch("geopandas.clip") as mock_clip,
+        ):
                 mock_gdf = gpd.read_file(json.dumps(sample_points_geojson), driver="GeoJSON")
                 mock_gdf = mock_gdf.to_crs("EPSG:25833")
                 mock_clip.return_value = mock_gdf
@@ -286,8 +292,10 @@ class TestStreetNetworkConnector:
         self, connector, sample_district_boundary, sample_streets_geojson
     ):
         """Test successful street structures fetching."""
-        with patch.object(connector, "_get_text", return_value=json.dumps(sample_streets_geojson)):
-            with patch("geopandas.clip") as mock_clip:
+        with (
+            patch.object(connector, "_get_text", return_value=json.dumps(sample_streets_geojson)),
+            patch("geopandas.clip") as mock_clip,
+        ):
                 mock_gdf = gpd.read_file(json.dumps(sample_streets_geojson), driver="GeoJSON")
                 mock_gdf = mock_gdf.to_crs("EPSG:25833")
                 mock_clip.return_value = mock_gdf

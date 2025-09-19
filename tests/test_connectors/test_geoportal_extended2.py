@@ -281,8 +281,10 @@ class TestBuildingFloorsConnector:
         self, connector, sample_district_boundary, sample_floors_geojson
     ):
         """Test successful specific floor range fetching."""
-        with patch.object(connector, "_get_text", return_value=json.dumps(sample_floors_geojson)):
-            with patch("geopandas.clip") as mock_clip:
+        with (
+            patch.object(connector, "_get_text", return_value=json.dumps(sample_floors_geojson)),
+            patch("geopandas.clip") as mock_clip,
+        ):
                 mock_gdf = gpd.read_file(json.dumps(sample_floors_geojson), driver="GeoJSON")
                 mock_gdf = mock_gdf.to_crs("EPSG:25833")
                 # Add floor_range column that would be added by _fetch_floor_layer
