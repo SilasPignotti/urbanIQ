@@ -129,6 +129,5 @@ dmypy.json
 .claude/
 ai-doc/
 PRP/
-CLAUDE.md
 
 # Documentation (doc/ and CHANGELOG.md are included in git)
