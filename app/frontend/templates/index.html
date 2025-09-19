@@ -271,16 +271,17 @@
 <script>
 // Initialize Berlin map
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize map centered on Berlin
+  // Initialize map centered on Berlin with full interactions enabled
   const map = L.map('berlin-map', {
-    zoomControl: false,
+    zoomControl: true,
     attributionControl: false
   }).setView([52.5200, 13.4050], 10);
 
-  // Add OpenStreetMap tiles
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // Add Carto Positron tiles (clean, light basemap)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 18,
-    attribution: ''
+    attribution: '',
+    subdomains: 'abcd'
   }).addTo(map);
 
   // Add custom attribution control in bottom-right corner
@@ -289,33 +290,11 @@ document.addEventListener('DOMContentLoaded', function() {
     prefix: false
   });
 
-  attributionControl.addAttribution('<span style="font-size: 10px; color: #6b7280; font-style: italic;">Berlin Geoportal · OpenStreetMap</span>');
+  attributionControl.addAttribution('<span style="font-size: 10px; color: #6b7280; font-style: italic;">© CARTO · Berlin Geoportal</span>');
   attributionControl.addTo(map);
 
-  // No marker needed - just show the map overview
 
-  // Add some Berlin district boundaries (simplified)
-  const berlinBounds = [
-    [52.3379, 13.0883], // Southwest
-    [52.6755, 13.7611]  // Northeast
-  ];
-
-  // Highlight Berlin area
-  L.rectangle(berlinBounds, {
-    color: '#2563eb',
-    weight: 2,
-    opacity: 0.3,
-    fillColor: '#3b82f6',
-    fillOpacity: 0.1
-  }).addTo(map);
-
-  // Disable interaction for a cleaner look
-  map.dragging.disable();
-  map.touchZoom.disable();
-  map.doubleClickZoom.disable();
-  map.scrollWheelZoom.disable();
-  map.boxZoom.disable();
-  map.keyboard.disable();
+  // Map is now fully interactive - users can pan, zoom, etc.
 });
 
 // Character counter for textarea
