@@ -211,8 +211,8 @@ def pankow_district_boundary() -> gpd.GeoDataFrame:
 
 
 @pytest.fixture
-def mock_gemini_response():
-    """Mock Google Gemini API response for NLP parsing."""
+def mock_openai_response():
+    """Mock OpenAI GPT API response for NLP parsing."""
     return {
         "bezirk": "Pankow",
         "datasets": '["gebaeude", "oepnv_haltestellen"]',

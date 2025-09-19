@@ -1,7 +1,7 @@
 """
 NLP Service for parsing German natural language geodata requests.
 
-Uses Google Gemini AI via LangChain to extract Berlin districts and datasets
+Uses OpenAI GPT via LangChain to extract Berlin districts and datasets
 from natural language input with confidence scoring and error handling.
 """
 

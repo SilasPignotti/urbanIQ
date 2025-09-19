@@ -1,7 +1,7 @@
 """
 Metadata Service for generating professional LLM-powered geodata reports.
 
-Uses Google Gemini AI to create comprehensive, multilingual metadata reports
+Uses OpenAI GPT to create comprehensive, multilingual metadata reports
 for geodata packages with quality assessment and usage recommendations.
 """
 

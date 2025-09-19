@@ -1,27 +1,12 @@
 #!/bin/bash
 #
-# Setup script to fetch GitHub secrets and configure local environment
+# Setup script to configure local environment with OpenAI API key
 # Usage: ./scripts/setup-env.sh
 #
 
 set -e
 
 echo "🔧 Setting up local development environment..."
-
-# Check if GitHub CLI is available
-if ! command -v gh &> /dev/null; then
-    echo "❌ GitHub CLI (gh) is not installed. Please install it first:"
-    echo "   brew install gh"
-    echo "   or visit: https://cli.github.com/"
-    exit 1
-fi
-
-# Check if user is authenticated with GitHub CLI
-if ! gh auth status &> /dev/null; then
-    echo "❌ Not authenticated with GitHub CLI. Please run:"
-    echo "   gh auth login"
-    exit 1
-fi
 
 # Prompt user to enter the API key manually
 echo "🔑 Please enter your OpenAI API key:"

@@ -396,14 +396,14 @@ class TestNLPServiceIntegration:
 class TestNLPServiceRealAPI:
     """Integration tests using real OpenAI GPT API calls.
 
-    These tests require GOOGLE_API_KEY to be set and make real API calls.
+    These tests require OPENAI_API_KEY to be set and make real API calls.
     Run with: pytest -m external
     Skip with: pytest -m "not external"
     """
 
     @pytest.mark.skipif(
         not settings.openai_api_key.get_secret_value()
-        or settings.openai_api_key.get_secret_value() == "your-gemini-api-key-here"
+        or settings.openai_api_key.get_secret_value() == "test-key"
         or os.getenv("CI") == "true",
         reason="No valid OpenAI API key configured or running in CI",
     )
@@ -444,7 +444,7 @@ class TestNLPServiceRealAPI:
 
     @pytest.mark.skipif(
         not settings.openai_api_key.get_secret_value()
-        or settings.openai_api_key.get_secret_value() == "your-gemini-api-key-here"
+        or settings.openai_api_key.get_secret_value() == "test-key"
         or os.getenv("CI") == "true",
         reason="No valid OpenAI API key configured or running in CI",
     )
