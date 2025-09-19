@@ -322,6 +322,102 @@ class TestNLPService:
         assert "nicht eindeutig" in suggestion
         assert "Beispiele" in suggestion
 
+    @patch(
+        "app.services.nlp_service.settings.openai_api_key", "sk-test-api-key-openai-minimum-length"
+    )
+    @patch("app.services.nlp_service.ChatOpenAI")
+    def test_new_dataset_recognition(self, mock_llm_class):
+        """Test recognition of new datasets from natural language."""
+        new_dataset_tests = [
+            ("Pankow Radwege", ["radverkehrsnetz"]),
+            ("Mitte Straßennetz", ["strassennetz"]),
+            ("Charlottenburg Ortsteile", ["ortsteilgrenzen"]),
+            ("Spandau Bevölkerungsdichte", ["einwohnerdichte"]),
+            ("Neukölln Geschosshöhe", ["geschosszahl"]),
+            ("Friedrichshain cycling infrastructure", ["radverkehrsnetz"]),
+            ("Tempelhof street network", ["strassennetz"]),
+        ]
+
+        for request_text, expected_datasets in new_dataset_tests:
+            # Mock LLM response for new datasets
+            mock_response = Mock()
+            mock_response.content = f"""{{
+                "bezirk": "{request_text.split()[0]}",
+                "datasets": {expected_datasets},
+                "confidence": 0.9,
+                "reasoning": "Recognized new dataset keywords"
+            }}"""
+
+            mock_llm = Mock()
+            mock_llm.invoke.return_value = mock_response
+            mock_llm_class.return_value = mock_llm
+
+            service = NLPService()
+            result = service.parse_user_request(request_text)
+
+            assert result.datasets == expected_datasets
+            assert result.confidence >= 0.7
+
+    @patch(
+        "app.services.nlp_service.settings.openai_api_key", "sk-test-api-key-openai-minimum-length"
+    )
+    def test_intelligent_use_case_mapping(self):
+        """Test intelligent use case mapping for complex analysis patterns."""
+        service = NLPService()
+        use_case_tests = [
+            ("Pankow Mobilitätsanalyse", ["radverkehrsnetz", "strassennetz", "oepnv_haltestellen"]),
+            (
+                "Mitte Bezirksanalyse",
+                ["ortsteilgrenzen", "gebaeude", "geschosszahl", "einwohnerdichte"],
+            ),
+            ("Charlottenburg Geschosshöhe", ["geschosszahl", "gebaeude"]),
+        ]
+
+        for request_text, expected_datasets in use_case_tests:
+            with patch.object(service.llm, "invoke") as mock_invoke:
+                # Mock LLM response for use case patterns
+                mock_response = Mock()
+                mock_response.content = f"""{{
+                    "bezirk": "{request_text.split()[0]}",
+                    "datasets": {expected_datasets},
+                    "confidence": 0.95,
+                    "reasoning": "Applied intelligent analysis pattern mapping"
+                }}"""
+                mock_invoke.return_value = mock_response
+
+                result = service.parse_user_request(request_text)
+
+                assert set(result.datasets) == set(expected_datasets)
+                assert result.confidence >= 0.9
+
+    @patch(
+        "app.services.nlp_service.settings.openai_api_key", "sk-test-api-key-openai-minimum-length"
+    )
+    def test_mixed_dataset_requests(self):
+        """Test requests with mixed explicit and pattern-based datasets."""
+        service = NLPService()
+        mixed_tests = [
+            ("Pankow Radwege und Straßen", ["radverkehrsnetz", "strassennetz"]),
+            ("Mitte Ortsteile und Bevölkerung", ["ortsteilgrenzen", "einwohnerdichte"]),
+            ("Spandau Gebäude und Geschosse", ["gebaeude", "geschosszahl"]),
+        ]
+
+        for request_text, expected_datasets in mixed_tests:
+            with patch.object(service.llm, "invoke") as mock_invoke:
+                mock_response = Mock()
+                mock_response.content = f"""{{
+                    "bezirk": "{request_text.split()[0]}",
+                    "datasets": {expected_datasets},
+                    "confidence": 0.85,
+                    "reasoning": "Recognized mixed dataset request"
+                }}"""
+                mock_invoke.return_value = mock_response
+
+                result = service.parse_user_request(request_text)
+
+                assert set(result.datasets) == set(expected_datasets)
+                assert result.confidence >= 0.7
+
 
 class TestNLPServiceIntegration:
     """Integration tests for NLP Service with Job model."""
@@ -491,8 +587,16 @@ class TestNLPServiceRealAPI:
         assert len(BERLIN_DISTRICTS) == 12
 
     def test_available_datasets_completeness(self):
-        """Test that available datasets match MVP scope."""
-        expected_datasets = {"gebaeude", "oepnv_haltestellen"}
+        """Test that available datasets match expanded scope."""
+        expected_datasets = {
+            "gebaeude",
+            "oepnv_haltestellen",
+            "radverkehrsnetz",
+            "strassennetz",
+            "ortsteilgrenzen",
+            "einwohnerdichte",
+            "geschosszahl",
+        }
 
         assert set(AVAILABLE_DATASETS) == expected_datasets
-        assert len(AVAILABLE_DATASETS) == 2
+        assert len(AVAILABLE_DATASETS) == 7
