@@ -39,16 +39,22 @@
    Form Components
    ========================================================================== */
 
-/* Input field styling */
+/* Enhanced input field styling */
 .input-field {
   @apply px-4 py-3 border border-gray-300 rounded-lg shadow-sm;
   @apply focus:ring-2 focus:ring-urban-blue-500 focus:border-urban-blue-500;
-  @apply transition-colors duration-200 ease-in-out;
+  @apply transition-all duration-200 ease-in-out;
   @apply placeholder-gray-400 text-gray-900;
+  @apply resize-none;
 }
 
 .input-field:hover {
-  @apply border-gray-400;
+  @apply border-gray-400 shadow-md;
+}
+
+.input-field:focus {
+  @apply shadow-lg;
+  transform: translateY(-1px);
 }
 
 .input-field:disabled {
@@ -56,21 +62,46 @@
   @apply border-gray-200;
 }
 
-/* Primary button styling */
+/* Enhanced textarea specific styling */
+textarea.input-field {
+  @apply leading-relaxed;
+  min-height: 120px;
+}
+
+/* Character counter enhancements */
+#char-counter {
+  @apply transition-all duration-200;
+  @apply font-mono text-xs;
+  @apply rounded shadow-sm;
+  backdrop-filter: blur(4px);
+}
+
+/* Enhanced primary button styling */
 .btn-primary {
   @apply px-6 py-3 bg-urban-blue-600 text-white font-medium rounded-lg;
   @apply hover:bg-urban-blue-700 focus:bg-urban-blue-700;
   @apply focus:ring-2 focus:ring-urban-blue-500 focus:ring-offset-2;
   @apply transition-all duration-200 ease-in-out;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
-  @apply shadow-sm hover:shadow-md;
+  @apply shadow-lg hover:shadow-xl;
+  @apply border border-urban-blue-700;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  @apply shadow-xl;
 }
 
 .btn-primary:active {
-  @apply bg-urban-blue-800 transform scale-95;
+  @apply bg-urban-blue-800;
+  transform: translateY(0) scale(0.98);
 }
 
-/* Secondary button styling */
+.btn-primary:focus {
+  transform: translateY(-1px);
+}
+
+/* Enhanced secondary button styling */
 .btn-secondary {
   @apply px-6 py-3 bg-white text-urban-blue-700 font-medium rounded-lg border border-urban-blue-300;
   @apply hover:bg-urban-blue-50 focus:bg-urban-blue-50;
@@ -80,8 +111,13 @@
   @apply shadow-sm hover:shadow-md;
 }
 
+.btn-secondary:hover {
+  transform: translateY(-1px);
+}
+
 .btn-secondary:active {
-  @apply bg-urban-blue-100 transform scale-95;
+  @apply bg-urban-blue-100;
+  transform: translateY(0) scale(0.98);
 }
 
 /* ==========================================================================
@@ -199,47 +235,136 @@
 }
 
 /* ==========================================================================
-   Responsive Design Enhancements
+   Enhanced Responsive Design
    ========================================================================== */
 
 /* Mobile-first responsive adjustments */
 @media (max-width: 639px) {
-  .status-card {
-    @apply p-4;
+  /* Compact spacing for mobile */
+  .large-card {
+    @apply p-6 rounded-xl;
   }
 
+  .modern-card {
+    @apply p-4 rounded-lg;
+  }
+
+  /* Mobile button styling */
   .btn-primary,
   .btn-secondary {
-    @apply px-4 py-2 text-sm;
+    @apply px-6 py-4 text-base;
+    min-height: 48px;
   }
 
   /* Ensure touch targets are at least 44px */
   button,
   .btn-primary,
   .btn-secondary,
-  input[type="submit"] {
+  input[type="submit"],
+  .example-query {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  /* Mobile map adjustments */
+  #berlin-map {
+    @apply h-48;
+  }
+
+  /* Mobile grid adjustments */
+  .grid {
+    @apply gap-4;
+  }
+
+  /* Disable hover effects on mobile */
+  .example-card:hover {
+    transform: none;
+    @apply shadow-sm;
+  }
+
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .input-field:focus {
+    transform: none;
   }
 }
 
 /* Tablet adjustments */
 @media (min-width: 640px) and (max-width: 1023px) {
-  .status-card {
+  .large-card {
+    @apply p-7;
+  }
+
+  .modern-card {
     @apply p-5;
+  }
+
+  #berlin-map {
+    @apply h-64;
+  }
+
+  /* Medium screen grid spacing */
+  .grid {
+    @apply gap-5;
   }
 }
 
 /* Desktop enhancements */
 @media (min-width: 1024px) {
-  .status-card {
+  .large-card {
+    @apply p-8;
+  }
+
+  .modern-card {
     @apply p-6;
   }
 
-  /* Enhanced hover effects on desktop */
-  .btn-primary:hover,
+  #berlin-map {
+    @apply h-96;
+  }
+
+  /* Enhanced hover effects on desktop only */
+  .btn-primary:hover {
+    transform: translateY(-2px);
+  }
+
   .btn-secondary:hover {
     transform: translateY(-1px);
+  }
+
+  .example-card:hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+
+  .input-field:focus {
+    transform: translateY(-1px);
+  }
+
+  /* Desktop grid spacing */
+  .grid {
+    @apply gap-6;
+  }
+
+  /* Larger icons on desktop */
+  .icon-container-responsive {
+    @apply w-12 h-12;
+  }
+}
+
+/* Large desktop optimizations */
+@media (min-width: 1280px) {
+  .large-card {
+    @apply p-10;
+  }
+
+  /* Extra spacing for large screens */
+  .grid {
+    @apply gap-8;
+  }
+
+  /* Larger map for extra large screens */
+  #berlin-map {
+    height: 450px;
   }
 }
 
@@ -331,17 +456,95 @@ button:focus {
 }
 
 /* ==========================================================================
+   Modern UI Components
+   ========================================================================== */
+
+/* Hero section with gradient */
+.hero-section {
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 50%, #eff6ff 100%);
+}
+
+/* Modern card styling */
+.modern-card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200;
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.modern-card:hover {
+  @apply shadow-md;
+  transform: translateY(-1px);
+}
+
+/* Large modern card for main content */
+.large-card {
+  @apply bg-white rounded-2xl shadow-sm border border-gray-200 p-8;
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Map container styling */
+#berlin-map {
+  @apply rounded-lg border border-gray-200 overflow-hidden;
+  @apply shadow-inner;
+}
+
+/* Icon containers */
+.icon-container {
+  @apply flex items-center justify-center;
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.icon-container-sm {
+  @apply w-8 h-8 rounded-lg;
+}
+
+.icon-container-md {
+  @apply w-10 h-10 rounded-lg;
+}
+
+.icon-container-lg {
+  @apply w-12 h-12 rounded-xl;
+}
+
+.icon-container-xl {
+  @apply w-16 h-16 rounded-2xl;
+}
+
+/* ==========================================================================
    Example Query Cards
    ========================================================================== */
 
+/* Enhanced example query cards */
+.example-card {
+  @apply bg-white rounded-xl p-6 border border-gray-200;
+  @apply shadow-sm hover:shadow-md;
+  @apply transition-all duration-200 ease-in-out;
+  @apply cursor-pointer group;
+}
+
+.example-card:hover {
+  transform: translateY(-2px) scale(1.02);
+  @apply shadow-lg;
+}
+
+.example-card:active {
+  transform: translateY(0) scale(0.98);
+  @apply shadow-sm;
+}
+
+/* Example query buttons */
 .example-query {
-  @apply transition-colors duration-200;
+  @apply transition-all duration-200;
   @apply focus:ring-2 focus:ring-urban-blue-500 focus:ring-offset-2;
   @apply focus:outline-none rounded;
 }
 
 .example-query:hover {
   @apply underline;
+}
+
+/* Example section styling */
+.examples-section {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
 }
 
 /* ==========================================================================
