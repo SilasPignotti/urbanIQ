@@ -144,15 +144,15 @@ class TestCyclingNetworkConnector:
             patch.object(connector, "_get_text", return_value=json.dumps(sample_cycling_geojson)),
             patch("geopandas.clip") as mock_clip,
         ):
-                mock_gdf = gpd.read_file(json.dumps(sample_cycling_geojson), driver="GeoJSON")
-                mock_gdf = mock_gdf.to_crs("EPSG:25833")
-                mock_clip.return_value = mock_gdf
+            mock_gdf = gpd.read_file(json.dumps(sample_cycling_geojson), driver="GeoJSON")
+            mock_gdf = mock_gdf.to_crs("EPSG:25833")
+            mock_clip.return_value = mock_gdf
 
-                result = await connector.fetch_long_distance_routes(sample_district_boundary)
+            result = await connector.fetch_long_distance_routes(sample_district_boundary)
 
-                assert not result.empty
-                assert len(result) == 2
-                assert result.crs == "EPSG:25833"
+            assert not result.empty
+            assert len(result) == 2
+            assert result.crs == "EPSG:25833"
 
     @pytest.mark.asyncio
     async def test_fetch_cycling_network_service_error(self, connector, sample_district_boundary):
@@ -256,16 +256,16 @@ class TestStreetNetworkConnector:
             patch.object(connector, "_get_text", return_value=json.dumps(sample_streets_geojson)),
             patch("geopandas.clip") as mock_clip,
         ):
-                mock_gdf = gpd.read_file(json.dumps(sample_streets_geojson), driver="GeoJSON")
-                mock_gdf = mock_gdf.to_crs("EPSG:25833")
-                mock_clip.return_value = mock_gdf
+            mock_gdf = gpd.read_file(json.dumps(sample_streets_geojson), driver="GeoJSON")
+            mock_gdf = mock_gdf.to_crs("EPSG:25833")
+            mock_clip.return_value = mock_gdf
 
-                result = await connector.fetch_street_segments(sample_district_boundary)
+            result = await connector.fetch_street_segments(sample_district_boundary)
 
-                assert not result.empty
-                assert len(result) == 1
-                assert result.crs == "EPSG:25833"
-                assert "name" in result.columns
+            assert not result.empty
+            assert len(result) == 1
+            assert result.crs == "EPSG:25833"
+            assert "name" in result.columns
 
     @pytest.mark.asyncio
     async def test_fetch_connection_points_success(
@@ -276,16 +276,16 @@ class TestStreetNetworkConnector:
             patch.object(connector, "_get_text", return_value=json.dumps(sample_points_geojson)),
             patch("geopandas.clip") as mock_clip,
         ):
-                mock_gdf = gpd.read_file(json.dumps(sample_points_geojson), driver="GeoJSON")
-                mock_gdf = mock_gdf.to_crs("EPSG:25833")
-                mock_clip.return_value = mock_gdf
+            mock_gdf = gpd.read_file(json.dumps(sample_points_geojson), driver="GeoJSON")
+            mock_gdf = mock_gdf.to_crs("EPSG:25833")
+            mock_clip.return_value = mock_gdf
 
-                result = await connector.fetch_connection_points(sample_district_boundary)
+            result = await connector.fetch_connection_points(sample_district_boundary)
 
-                assert not result.empty
-                assert len(result) == 1
-                assert result.crs == "EPSG:25833"
-                assert "typ" in result.columns
+            assert not result.empty
+            assert len(result) == 1
+            assert result.crs == "EPSG:25833"
+            assert "typ" in result.columns
 
     @pytest.mark.asyncio
     async def test_fetch_street_structures_success(
@@ -296,14 +296,14 @@ class TestStreetNetworkConnector:
             patch.object(connector, "_get_text", return_value=json.dumps(sample_streets_geojson)),
             patch("geopandas.clip") as mock_clip,
         ):
-                mock_gdf = gpd.read_file(json.dumps(sample_streets_geojson), driver="GeoJSON")
-                mock_gdf = mock_gdf.to_crs("EPSG:25833")
-                mock_clip.return_value = mock_gdf
+            mock_gdf = gpd.read_file(json.dumps(sample_streets_geojson), driver="GeoJSON")
+            mock_gdf = mock_gdf.to_crs("EPSG:25833")
+            mock_clip.return_value = mock_gdf
 
-                result = await connector.fetch_street_structures(sample_district_boundary)
+            result = await connector.fetch_street_structures(sample_district_boundary)
 
-                assert not result.empty
-                assert result.crs == "EPSG:25833"
+            assert not result.empty
+            assert result.crs == "EPSG:25833"
 
 
 class TestOrtsteileBoundariesConnector:

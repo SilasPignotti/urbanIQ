@@ -285,22 +285,20 @@ class TestBuildingFloorsConnector:
             patch.object(connector, "_get_text", return_value=json.dumps(sample_floors_geojson)),
             patch("geopandas.clip") as mock_clip,
         ):
-                mock_gdf = gpd.read_file(json.dumps(sample_floors_geojson), driver="GeoJSON")
-                mock_gdf = mock_gdf.to_crs("EPSG:25833")
-                # Add floor_range column that would be added by _fetch_floor_layer
-                mock_gdf["floor_range"] = "7_to_10"
-                mock_clip.return_value = mock_gdf
+            mock_gdf = gpd.read_file(json.dumps(sample_floors_geojson), driver="GeoJSON")
+            mock_gdf = mock_gdf.to_crs("EPSG:25833")
+            # Add floor_range column that would be added by _fetch_floor_layer
+            mock_gdf["floor_range"] = "7_to_10"
+            mock_clip.return_value = mock_gdf
 
-                result = await connector.fetch_specific_floor_range(
-                    sample_district_boundary, "7_to_10"
-                )
+            result = await connector.fetch_specific_floor_range(sample_district_boundary, "7_to_10")
 
-                assert not result.empty
-                assert len(result) == 2
-                assert result.crs == "EPSG:25833"
-                assert "floor_range" in result.columns
-                assert all(result["floor_range"] == "7_to_10")
-                assert "geschosse" in result.columns
+            assert not result.empty
+            assert len(result) == 2
+            assert result.crs == "EPSG:25833"
+            assert "floor_range" in result.columns
+            assert all(result["floor_range"] == "7_to_10")
+            assert "geschosse" in result.columns
 
     @pytest.mark.asyncio
     async def test_fetch_specific_floor_range_invalid_range(

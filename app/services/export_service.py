@@ -7,7 +7,7 @@ LLM-generated metadata reports, and comprehensive documentation.
 
 import tempfile
 import zipfile
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -127,7 +127,7 @@ class ExportService:
 
         try:
             # Generate unique package filename
-            timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             package_filename = f"geodata_{bezirk.lower()}_{timestamp}.zip"
             package_path = self.export_dir / package_filename
 
@@ -368,7 +368,7 @@ class ExportService:
 
     def _generate_readme_content(self, datasets: list[dict[str, Any]], bezirk: str) -> str:
         """Generate README.md content with usage instructions."""
-        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
         readme_lines = [
             f"# Geodatenpaket {bezirk}",
@@ -490,7 +490,7 @@ class ExportService:
                 try:
                     # Check if file is older than 24 hours (package expiration default)
                     file_age_hours = (
-                        datetime.utcnow().timestamp() - zip_file.stat().st_mtime
+                        datetime.now(timezone.utc).timestamp() - zip_file.stat().st_mtime
                     ) / 3600
 
                     if file_age_hours > 24:

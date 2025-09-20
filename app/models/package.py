@@ -5,7 +5,7 @@ Manages ZIP packages with geodata files and LLM-generated metadata reports,
 including download tracking and automatic expiration.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -54,7 +54,7 @@ class Package(SQLModel, table=True):
         description="Package creation timestamp",
     )
     expires_at: datetime = Field(
-        default_factory=lambda: datetime.utcnow() + timedelta(hours=24),
+        default_factory=lambda: datetime.now(timezone.utc) + timedelta(hours=24),
         description="Automatic cleanup timestamp (24h default)",
     )
 
@@ -79,7 +79,7 @@ class Package(SQLModel, table=True):
 
     def is_expired(self) -> bool:
         """Check if package has expired."""
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(timezone.utc) > self.expires_at
 
     def increment_download(self) -> None:
         """Increment download counter."""
@@ -87,7 +87,7 @@ class Package(SQLModel, table=True):
 
     def extend_expiration(self, hours: int = 24) -> None:
         """Extend package expiration time."""
-        self.expires_at = datetime.utcnow() + timedelta(hours=hours)
+        self.expires_at = datetime.now(timezone.utc) + timedelta(hours=hours)
 
     def get_file_size_mb(self) -> float | None:
         """Get file size in megabytes."""
