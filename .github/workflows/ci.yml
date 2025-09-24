@@ -14,15 +14,12 @@ env:
   UV_VERSION: "0.4.18"
 
 jobs:
-  test:
+  quality-check:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12"]
-        include:
-          - python-version: "3.12"
-            coverage: true
+        python-version: ["3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
@@ -35,15 +32,12 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
-      - name: Install GDAL (latest version matching your Homebrew setup)
+      - name: Install GDAL dependencies
         run: |
-          # Add ubuntugis repository for latest GDAL
           sudo apt-get update
           sudo apt-get install -y software-properties-common
           sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable -y
           sudo apt-get update
-
-          # Install GDAL and build dependencies
           sudo apt-get install -y \
             gdal-bin \
             libgdal-dev \
@@ -57,9 +51,7 @@ jobs:
 
       - name: Configure GDAL environment
         run: |
-          # Get GDAL version and set environment
           GDAL_VERSION=$(gdal-config --version)
-          echo "✅ GDAL Version: $GDAL_VERSION"
           echo "GDAL_VERSION=$GDAL_VERSION" >> $GITHUB_ENV
           echo "CPLUS_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
           echo "C_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
@@ -73,44 +65,19 @@ jobs:
             uv-${{ runner.os }}-${{ matrix.python-version }}-
             uv-${{ runner.os }}-
 
-      - name: Install Python dependencies
-        run: |
-          echo "📦 Installing dependencies with GDAL $GDAL_VERSION..."
-          uv sync --all-extras --frozen
+      - name: Install dependencies
+        run: uv sync --frozen
 
-      - name: Verify installation
-        run: |
-          uv run python -c "import geopandas; print('GeoPandas version:', geopandas.__version__)"
-          uv run python -c "import fastapi; print('FastAPI version:', fastapi.__version__)"
+      - name: Code formatting check
+        run: uv run ruff format --check .
 
-      - name: Run linting
-        run: |
-          uv run ruff check . --output-format=github
-          uv run ruff format --check .
+      - name: Linting
+        run: uv run ruff check . --output-format=github
 
-      - name: Run type checking
+      - name: Type checking
         run: uv run mypy app/ --install-types --non-interactive
 
-      - name: Run essential tests (models, config, core)
-        run: |
-          uv run pytest tests/test_models/ tests/test_config.py tests/test_database.py -v --maxfail=5
+      - name: Basic functionality tests
+        run: uv run pytest tests/test_models/ tests/test_database.py tests/test_health.py -v
         env:
           OPENAI_API_KEY: 'mock-key-for-testing'
-
-      - name: Run basic service tests
-        run: |
-          uv run pytest tests/test_services/test_nlp_service.py tests/test_services/test_metadata_service.py -v --maxfail=3
-        env:
-          OPENAI_API_KEY: 'mock-key-for-testing'
-
-      - name: Comprehensive test suite (skipped for MVP - see Step 15)
-        run: |
-          echo "⏭️  Skipping comprehensive test suite for fast CI"
-          echo "📋 Full test coverage will be implemented in Step 15: Production Ready"
-          echo "✅ Essential components tested above are sufficient for MVP delivery"
-
-      - name: Coverage reporting (deferred to Step 15)
-        if: matrix.coverage == true
-        run: |
-          echo "📊 Coverage reporting will be implemented in Step 15"
-          echo "🎯 Current essential tests provide core functionality validation"

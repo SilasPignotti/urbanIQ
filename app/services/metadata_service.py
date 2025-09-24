@@ -468,13 +468,11 @@ RECOMMENDATIONS: [Numbered list with 3-4 recommendations]
         return enhanced_data
 
     def _format_spatial_extent(self, extent: list) -> str:
-        """Format spatial extent coordinates for display."""
         if not extent or len(extent) != 4:
             return "Not available"
         return f"[{extent[0]:.3f}, {extent[1]:.3f}, {extent[2]:.3f}, {extent[3]:.3f}]"
 
     def _format_number(self, value: int | str) -> str:
-        """Format numbers with thousands separators."""
         if isinstance(value, int):
             return f"{value:,}".replace(",", ".")
         return str(value)

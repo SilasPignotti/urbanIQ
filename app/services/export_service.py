@@ -93,7 +93,6 @@ class ExportService:
         """Initialize Export Service with configured export directory."""
         logger.info("Initializing Export Service")
 
-        # Ensure export directory exists
         self.export_dir = Path(settings.export_dir)
         self.export_dir.mkdir(parents=True, exist_ok=True)
 
@@ -126,30 +125,23 @@ class ExportService:
         export_logger.info("Starting geodata package creation", dataset_count=len(datasets))
 
         try:
-            # Generate unique package filename
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
             package_filename = f"geodata_{bezirk.lower()}_{timestamp}.zip"
             package_path = self.export_dir / package_filename
 
-            # Create ZIP package
             with tempfile.TemporaryDirectory() as temp_dir:
                 temp_path = Path(temp_dir)
 
-                # Export geodata in multiple formats
                 self._export_geodata_files(datasets, temp_path, export_logger)
 
-                # Create documentation files
                 self._create_documentation_files(
                     datasets, metadata_report, bezirk, temp_path, export_logger
                 )
 
-                # Create ZIP package
                 self._create_zip_package(temp_path, package_path, export_logger)
 
-            # Calculate file size
             file_size = package_path.stat().st_size
 
-            # Create Package model instance
             package = Package(
                 job_id=job_id,
                 file_path=str(package_path.absolute()),
@@ -184,12 +176,10 @@ class ExportService:
                 logger_instance.warning("Skipping empty dataset", dataset_type=dataset_type)
                 continue
 
-            # Export in GeoJSON format (primary)
             self._export_geodata_format(
                 geodata, dataset_type, "geojson", output_dir, logger_instance
             )
 
-            # Export in Shapefile format (compatibility)
             self._export_geodata_format(
                 geodata, dataset_type, "shapefile", output_dir, logger_instance
             )
@@ -215,7 +205,6 @@ class ExportService:
                     geodata, dataset_type, logger_instance
                 )
 
-            # Export using GeoPandas
             export_data.to_file(
                 output_path,
                 driver=format_config["driver"],
@@ -422,7 +411,6 @@ class ExportService:
         return "\n".join(readme_lines)
 
     def _get_dataset_display_name(self, dataset_type: str) -> str:
-        """Get human-readable display name for dataset type."""
         display_names = {
             "bezirksgrenzen": "Bezirksgrenzen Berlin",
             "gebaeude": "Gebäudedaten Berlin",

@@ -73,10 +73,8 @@ class ProcessingService:
         start_time = datetime.now()
 
         try:
-            # Extract district boundary (always first dataset from DataService)
             district_boundary = self._extract_district_boundary(datasets, target_district)
 
-            # Process all datasets through harmonization pipeline
             harmonized_datasets = []
             processing_stats = {"datasets_processed": 0, "datasets_failed": 0, "total_features": 0}
 
@@ -96,7 +94,6 @@ class ProcessingService:
                     )
                     processing_stats["datasets_failed"] += 1
 
-            # Combine all harmonized datasets
             if harmonized_datasets:
                 harmonized_gdf = pd.concat(harmonized_datasets, ignore_index=True)
                 harmonized_gdf = gpd.GeoDataFrame(harmonized_gdf, crs=TARGET_CRS)
@@ -105,7 +102,6 @@ class ProcessingService:
                     columns=list(STANDARD_SCHEMA.keys()), crs=TARGET_CRS
                 )
 
-            # Calculate final quality statistics
             quality_stats = self._calculate_quality_stats(harmonized_gdf, processing_stats)
 
             processing_duration = (datetime.now() - start_time).total_seconds() * 1000
@@ -206,17 +202,13 @@ class ProcessingService:
             logger.warning(f"Empty dataset: {dataset_type}")
             return gpd.GeoDataFrame(columns=list(STANDARD_SCHEMA.keys()), crs=TARGET_CRS)
 
-        # Step 1: Standardize CRS
         gdf = self._standardize_crs(gdf)
 
-        # Step 2: Clip to district boundary (except for district boundary itself)
         if dataset_type != "bezirksgrenzen":
             gdf = self._clip_to_boundary(gdf, district_boundary)
 
-        # Step 3: Validate and clean geometries
         gdf = self._validate_geometries(gdf)
 
-        # Step 4: Apply standard schema
         gdf = self._standardize_schema(gdf, dataset_type, source_system, target_district)
 
         return gdf
@@ -291,7 +283,6 @@ class ProcessingService:
         if gdf.empty:
             return gdf
 
-        # Check for invalid geometries
         invalid_mask = ~gdf.geometry.is_valid
         invalid_count = invalid_mask.sum()
 
@@ -301,10 +292,8 @@ class ProcessingService:
                 extra={"invalid_geometries": invalid_count, "total_features": len(gdf)},
             )
 
-            # Clean invalid geometries using buffer(0)
             gdf.loc[invalid_mask, "geometry"] = gdf.loc[invalid_mask, "geometry"].buffer(0)
 
-            # Verify cleaning worked
             still_invalid = (~gdf.geometry.is_valid).sum()
             if still_invalid > 0:
                 logger.error(f"Failed to clean {still_invalid} geometries, removing them")
@@ -333,14 +322,12 @@ class ProcessingService:
             empty_gdf["geometry"] = gpd.GeoSeries([], crs=TARGET_CRS)
             return empty_gdf
 
-        # Store original columns (excluding geometry)
         original_columns = [col for col in gdf.columns if col != "geometry"]
         if original_columns:
             original_attributes = gdf[original_columns].to_dict(orient="records")
         else:
             original_attributes = [{}] * len(gdf)
 
-        # Create standardized DataFrame
         standardized_data = {
             "feature_id": [f"{dataset_type}_{i}" for i in range(len(gdf))],
             "dataset_type": [dataset_type] * len(gdf),
