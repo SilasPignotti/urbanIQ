@@ -1,7 +1,7 @@
 """
 NLP Service for parsing German natural language geodata requests.
 
-Uses Google Gemini AI via LangChain to extract Berlin districts and datasets
+Uses OpenAI GPT via LangChain to extract Berlin districts and datasets
 from natural language input with confidence scoring and error handling.
 """
 
@@ -34,10 +34,15 @@ BERLIN_DISTRICTS = [
     "Friedrichshain-Kreuzberg",
 ]
 
-# Available datasets for MVP scope
+# Available datasets for expanded scope
 AVAILABLE_DATASETS = [
     "gebaeude",  # Buildings from Berlin Geoportal
     "oepnv_haltestellen",  # Public transport stops from OpenStreetMap
+    "radverkehrsnetz",  # Cycling network data from Berlin Geoportal
+    "strassennetz",  # Street network data from Berlin Geoportal
+    "ortsteilgrenzen",  # Ortsteile administrative boundaries from Berlin Geoportal
+    "einwohnerdichte",  # Population density 2024 data from Berlin Geoportal
+    "geschosszahl",  # Building floors categorization from Berlin Geoportal
 ]
 
 
@@ -176,18 +181,31 @@ VERFÜGBARE BERLIN BEZIRKE:
 VERFÜGBARE DATENSÄTZE (nur diese verwenden):
 - gebaeude: Gebäudedaten, Bauten, Häuser, Wohngebäude, Bürogebäude
 - oepnv_haltestellen: ÖPNV-Haltestellen, Bushaltestellen, U-Bahn-Stationen, S-Bahn-Stationen, öffentlicher Nahverkehr
+- radverkehrsnetz: Radwege, Fahrradnetz, Cycling Network, Radverkehr, Fahrradinfrastruktur
+- strassennetz: Straßen, Straßennetz, Verkehrsnetz, roads, streets, Verkehrsinfrastruktur
+- ortsteilgrenzen: Ortsteile, Ortsteilgrenzen, Stadtteile, sub-districts, neighborhoods
+- einwohnerdichte: Bevölkerungsdichte, Einwohnerdichte, population density, demographics
+- geschosszahl: Gebäudegeschosse, Stockwerke, Geschosshöhe, building floors, building heights
+
+INTELLIGENTE ANALYSENMUSTER:
+MOBILITÄTSANALYSE → automatisch: ["radverkehrsnetz", "strassennetz", "oepnv_haltestellen"]
+BEZIRKSANALYSE → automatisch: ["ortsteilgrenzen", "gebaeude", "geschosszahl", "einwohnerdichte"]
+GESCHOSSHÖHE → automatisch: ["geschosszahl", "gebaeude"]
 
 ANWEISUNGEN:
 1. Identifiziere den Berliner Bezirk aus dem Text
-2. Identifiziere die gewünschten Datensätze basierend auf den Schlüsselwörtern
-3. Bewerte deine Confidence (0.0-1.0) für die Extraktion
-4. Gib eine kurze Begründung für deine Entscheidung
+2. Identifiziere die gewünschten Datensätze basierend auf Schlüsselwörtern ODER Analysemustern
+3. Bei Analysemustern: verwende die automatische Datensatz-Kombination
+4. Bewerte deine Confidence (0.0-1.0) für die Extraktion
+5. Gib eine kurze Begründung für deine Entscheidung
 
-BEISPIELE:
-- "Pankow Gebäude und ÖPNV-Haltestellen" → bezirk: "Pankow", datasets: ["gebaeude", "oepnv_haltestellen"]
-- "Mitte buildings and transport" → bezirk: "Mitte", datasets: ["gebaeude", "oepnv_haltestellen"]
-- "Charlottenburg Wohngebäude" → bezirk: "Charlottenburg-Wilmersdorf", datasets: ["gebaeude"]
-- "Spandau Bushaltestellen" → bezirk: "Spandau", datasets: ["oepnv_haltestellen"]
+ERWEITERTE BEISPIELE:
+- "Pankow Mobilitätsanalyse" → bezirk: "Pankow", datasets: ["radverkehrsnetz", "strassennetz", "oepnv_haltestellen"]
+- "Mitte Bezirksanalyse" → bezirk: "Mitte", datasets: ["ortsteilgrenzen", "gebaeude", "geschosszahl", "einwohnerdichte"]
+- "Charlottenburg Geschosshöhe" → bezirk: "Charlottenburg-Wilmersdorf", datasets: ["geschosszahl", "gebaeude"]
+- "Spandau Radwege und Straßen" → bezirk: "Spandau", datasets: ["radverkehrsnetz", "strassennetz"]
+- "Pankow Ortsteile und Bevölkerung" → bezirk: "Pankow", datasets: ["ortsteilgrenzen", "einwohnerdichte"]
+- "Neukölln cycling infrastructure" → bezirk: "Neukölln", datasets: ["radverkehrsnetz"]
 
 USER QUERY: {{query}}
 
@@ -197,6 +215,7 @@ WICHTIG:
 - Confidence unter 0.7 wenn Bezirk oder Datensätze unklar sind
 - Nur verfügbare Datensätze verwenden
 - Bezirksnamen exakt wie in der Liste angeben
+- Bei Analysemustern: verwende die vordefinierten Kombinationen
 - Reasoning auf Deutsch verfassen
 """
 

@@ -5,7 +5,7 @@ Provides comprehensive health checks including database connectivity,
 system information, and service status for monitoring and diagnostics.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
@@ -77,7 +77,7 @@ async def health_check(settings: SettingsDep) -> HealthResponse:
 
     return HealthResponse(
         status=overall_status,
-        timestamp=datetime.now(UTC),
+        timestamp=datetime.utcnow(),
         version=settings.app_version,
         environment=settings.environment,
         services=services,

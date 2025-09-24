@@ -13,20 +13,30 @@ from typing import Any
 import geopandas as gpd
 
 from app.connectors import (
+    BuildingFloorsConnector,
     BuildingsConnector,
     ConnectorError,
+    CyclingNetworkConnector,
     DistrictBoundariesConnector,
+    OrtsteileBoundariesConnector,
     OverpassConnector,
+    PopulationDensityConnector,
+    StreetNetworkConnector,
 )
 from app.models.job import JobStatus
 
 logger = logging.getLogger("urbaniq.data_service")
 
-# Dataset to connector mapping for MVP scope
+# Dataset to connector mapping for expanded scope
 DATASET_CONNECTOR_MAPPING = {
     "bezirksgrenzen": DistrictBoundariesConnector,  # Always retrieved
     "gebaeude": BuildingsConnector,
     "oepnv_haltestellen": OverpassConnector,
+    "radverkehrsnetz": CyclingNetworkConnector,
+    "strassennetz": StreetNetworkConnector,
+    "ortsteilgrenzen": OrtsteileBoundariesConnector,
+    "einwohnerdichte": PopulationDensityConnector,
+    "geschosszahl": BuildingFloorsConnector,
 }
 
 # Predefined metadata for each dataset type
@@ -49,6 +59,36 @@ DATASET_METADATA = {
         "license": "Open Database License (ODbL)",
         "update_frequency": "daily",
     },
+    "radverkehrsnetz": {
+        "name": "Radverkehrsnetz Berlin",
+        "description": "Cycling network infrastructure and routes",
+        "license": "CC BY 3.0 DE",
+        "update_frequency": "quarterly",
+    },
+    "strassennetz": {
+        "name": "Straßennetz Berlin",
+        "description": "Street network infrastructure and traffic routes",
+        "license": "CC BY 3.0 DE",
+        "update_frequency": "monthly",
+    },
+    "ortsteilgrenzen": {
+        "name": "Ortsteile Berlin",
+        "description": "Sub-district administrative boundaries",
+        "license": "CC BY 3.0 DE",
+        "update_frequency": "annually",
+    },
+    "einwohnerdichte": {
+        "name": "Einwohnerdichte Berlin 2024",
+        "description": "Population density statistics by area",
+        "license": "CC BY 3.0 DE",
+        "update_frequency": "annually",
+    },
+    "geschosszahl": {
+        "name": "Gebäudegeschosse Berlin",
+        "description": "Building floors categorization by height ranges",
+        "license": "CC BY 3.0 DE",
+        "update_frequency": "quarterly",
+    },
 }
 
 
@@ -65,10 +105,20 @@ class DataService:
         self._district_connector = DistrictBoundariesConnector()
         self._buildings_connector = BuildingsConnector()
         self._osm_connector = OverpassConnector()
+        self._cycling_connector = CyclingNetworkConnector()
+        self._street_connector = StreetNetworkConnector()
+        self._ortsteile_connector = OrtsteileBoundariesConnector()
+        self._population_connector = PopulationDensityConnector()
+        self._floors_connector = BuildingFloorsConnector()
         self._connector_instances = {
             "bezirksgrenzen": self._district_connector,
             "gebaeude": self._buildings_connector,
             "oepnv_haltestellen": self._osm_connector,
+            "radverkehrsnetz": self._cycling_connector,
+            "strassennetz": self._street_connector,
+            "ortsteilgrenzen": self._ortsteile_connector,
+            "einwohnerdichte": self._population_connector,
+            "geschosszahl": self._floors_connector,
         }
 
     async def fetch_datasets_for_request(
@@ -249,6 +299,26 @@ class DataService:
                 # First get district boundary for spatial filtering
                 district_gdf = await self._district_connector.fetch_district_boundary(bezirk)
                 geodata = await self._osm_connector.fetch_transport_stops(district_gdf)
+            elif dataset_type == "radverkehrsnetz":
+                # First get district boundary for spatial filtering
+                district_gdf = await self._district_connector.fetch_district_boundary(bezirk)
+                geodata = await self._cycling_connector.fetch_cycling_network(district_gdf)
+            elif dataset_type == "strassennetz":
+                # First get district boundary for spatial filtering
+                district_gdf = await self._district_connector.fetch_district_boundary(bezirk)
+                geodata = await self._street_connector.fetch_street_segments(district_gdf)
+            elif dataset_type == "ortsteilgrenzen":
+                # First get district boundary for spatial filtering
+                district_gdf = await self._district_connector.fetch_district_boundary(bezirk)
+                geodata = await self._ortsteile_connector.fetch_ortsteile_boundaries(district_gdf)
+            elif dataset_type == "einwohnerdichte":
+                # First get district boundary for spatial filtering
+                district_gdf = await self._district_connector.fetch_district_boundary(bezirk)
+                geodata = await self._population_connector.fetch_population_density(district_gdf)
+            elif dataset_type == "geschosszahl":
+                # First get district boundary for spatial filtering
+                district_gdf = await self._district_connector.fetch_district_boundary(bezirk)
+                geodata = await self._floors_connector.fetch_all_building_floors(district_gdf)
             else:
                 raise ConnectorError(f"Unsupported dataset type: {dataset_type}")
 
@@ -372,12 +442,26 @@ class DataService:
             self._test_single_connector_health("district", self._district_connector),
             self._test_single_connector_health("buildings", self._buildings_connector),
             self._test_single_connector_health("osm", self._osm_connector),
+            self._test_single_connector_health("cycling", self._cycling_connector),
+            self._test_single_connector_health("street", self._street_connector),
+            self._test_single_connector_health("ortsteile", self._ortsteile_connector),
+            self._test_single_connector_health("population", self._population_connector),
+            self._test_single_connector_health("floors", self._floors_connector),
         ]
 
         results = await asyncio.gather(*health_tasks, return_exceptions=True)
 
         health_status = {}
-        connector_names = ["district", "buildings", "osm"]
+        connector_names = [
+            "district",
+            "buildings",
+            "osm",
+            "cycling",
+            "street",
+            "ortsteile",
+            "population",
+            "floors",
+        ]
 
         for i, result in enumerate(results):
             connector_name = connector_names[i]
@@ -394,7 +478,16 @@ class DataService:
     async def _test_single_connector_health(
         self,
         name: str,
-        connector: DistrictBoundariesConnector | BuildingsConnector | OverpassConnector,
+        connector: (
+            DistrictBoundariesConnector
+            | BuildingsConnector
+            | OverpassConnector
+            | CyclingNetworkConnector
+            | StreetNetworkConnector
+            | OrtsteileBoundariesConnector
+            | PopulationDensityConnector
+            | BuildingFloorsConnector
+        ),
     ) -> bool:
         """
         Test health of a single connector.

@@ -28,10 +28,15 @@ class TestDataServiceInitialization:
         assert service._district_connector is not None
         assert service._buildings_connector is not None
         assert service._osm_connector is not None
-        assert len(service._connector_instances) == 3
+        assert len(service._connector_instances) == 8
         assert "bezirksgrenzen" in service._connector_instances
         assert "gebaeude" in service._connector_instances
         assert "oepnv_haltestellen" in service._connector_instances
+        assert "radverkehrsnetz" in service._connector_instances
+        assert "strassennetz" in service._connector_instances
+        assert "ortsteilgrenzen" in service._connector_instances
+        assert "einwohnerdichte" in service._connector_instances
+        assert "geschosszahl" in service._connector_instances
 
     def test_dataset_connector_mapping_completeness(self):
         """Test dataset connector mapping includes all required datasets."""
