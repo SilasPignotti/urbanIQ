@@ -343,7 +343,7 @@ class TestNLPService:
             mock_response = Mock()
             mock_response.content = f"""{{
                 "bezirk": "{request_text.split()[0]}",
-                "datasets": {expected_datasets},
+                "datasets": {str(expected_datasets).replace("'", '"')},
                 "confidence": 0.9,
                 "reasoning": "Recognized new dataset keywords"
             }}"""
@@ -358,12 +358,12 @@ class TestNLPService:
             assert result.datasets == expected_datasets
             assert result.confidence >= 0.7
 
+    @patch("app.services.nlp_service.ChatOpenAI")
     @patch(
         "app.services.nlp_service.settings.openai_api_key", "sk-test-api-key-openai-minimum-length"
     )
-    def test_intelligent_use_case_mapping(self):
+    def test_intelligent_use_case_mapping(self, mock_llm_class):
         """Test intelligent use case mapping for complex analysis patterns."""
-        service = NLPService()
         use_case_tests = [
             ("Pankow Mobilitätsanalyse", ["radverkehrsnetz", "strassennetz", "oepnv_haltestellen"]),
             (
@@ -374,28 +374,31 @@ class TestNLPService:
         ]
 
         for request_text, expected_datasets in use_case_tests:
-            with patch.object(service.llm, "invoke") as mock_invoke:
-                # Mock LLM response for use case patterns
-                mock_response = Mock()
-                mock_response.content = f"""{{
-                    "bezirk": "{request_text.split()[0]}",
-                    "datasets": {expected_datasets},
-                    "confidence": 0.95,
-                    "reasoning": "Applied intelligent analysis pattern mapping"
-                }}"""
-                mock_invoke.return_value = mock_response
+            # Mock LLM response for use case patterns
+            mock_response = Mock()
+            mock_response.content = f"""{{
+                "bezirk": "{request_text.split()[0]}",
+                "datasets": {str(expected_datasets).replace("'", '"')},
+                "confidence": 0.95,
+                "reasoning": "Applied intelligent analysis pattern mapping"
+            }}"""
 
-                result = service.parse_user_request(request_text)
+            mock_llm = Mock()
+            mock_llm.invoke.return_value = mock_response
+            mock_llm_class.return_value = mock_llm
 
-                assert set(result.datasets) == set(expected_datasets)
-                assert result.confidence >= 0.9
+            service = NLPService()
+            result = service.parse_user_request(request_text)
 
+            assert set(result.datasets) == set(expected_datasets)
+            assert result.confidence >= 0.9
+
+    @patch("app.services.nlp_service.ChatOpenAI")
     @patch(
         "app.services.nlp_service.settings.openai_api_key", "sk-test-api-key-openai-minimum-length"
     )
-    def test_mixed_dataset_requests(self):
+    def test_mixed_dataset_requests(self, mock_llm_class):
         """Test requests with mixed explicit and pattern-based datasets."""
-        service = NLPService()
         mixed_tests = [
             ("Pankow Radwege und Straßen", ["radverkehrsnetz", "strassennetz"]),
             ("Mitte Ortsteile und Bevölkerung", ["ortsteilgrenzen", "einwohnerdichte"]),
@@ -403,20 +406,23 @@ class TestNLPService:
         ]
 
         for request_text, expected_datasets in mixed_tests:
-            with patch.object(service.llm, "invoke") as mock_invoke:
-                mock_response = Mock()
-                mock_response.content = f"""{{
-                    "bezirk": "{request_text.split()[0]}",
-                    "datasets": {expected_datasets},
-                    "confidence": 0.85,
-                    "reasoning": "Recognized mixed dataset request"
-                }}"""
-                mock_invoke.return_value = mock_response
+            mock_response = Mock()
+            mock_response.content = f"""{{
+                "bezirk": "{request_text.split()[0]}",
+                "datasets": {str(expected_datasets).replace("'", '"')},
+                "confidence": 0.85,
+                "reasoning": "Recognized mixed dataset request"
+            }}"""
 
-                result = service.parse_user_request(request_text)
+            mock_llm = Mock()
+            mock_llm.invoke.return_value = mock_response
+            mock_llm_class.return_value = mock_llm
 
-                assert set(result.datasets) == set(expected_datasets)
-                assert result.confidence >= 0.7
+            service = NLPService()
+            result = service.parse_user_request(request_text)
+
+            assert set(result.datasets) == set(expected_datasets)
+            assert result.confidence >= 0.7
 
 
 class TestNLPServiceIntegration:
