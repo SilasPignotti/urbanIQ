@@ -181,11 +181,9 @@ class BuildingsConnector(BaseConnector):
         Returns:
             BBOX parameter string in format: minx,miny,maxx,maxy,EPSG:25833
         """
-        # Get total bounds of all geometries
         bounds = district_gdf.total_bounds
         minx, miny, maxx, maxy = bounds
 
-        # Add small buffer to ensure we don't miss edge cases
         buffer = 100  # 100 meters buffer in EPSG:25833
         bbox_str = f"{minx - buffer},{miny - buffer},{maxx + buffer},{maxy + buffer},EPSG:25833"
 

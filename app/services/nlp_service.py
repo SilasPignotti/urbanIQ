@@ -249,21 +249,17 @@ WICHTIG:
             )
 
         try:
-            # Create the full prompt
             prompt = self.prompt_template.format(query=text.strip())
 
             logger.info(f"Processing NLP request: '{text[:100]}...'")
 
-            # Get response from LLM
             response = self.llm.invoke(prompt)
 
-            # Parse the structured response
             content = (
                 response.content if isinstance(response.content, str) else str(response.content)
             )
             parsed_result = self.parser.parse(content)
 
-            # Validate confidence threshold
             if not parsed_result.is_confident:
                 logger.warning(f"Low confidence ({parsed_result.confidence}) for request: {text}")
                 parsed_result.error_message = f"Niedrige Confidence ({parsed_result.confidence:.2f}). Bitte präzisieren Sie Ihre Anfrage."

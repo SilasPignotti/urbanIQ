@@ -50,11 +50,6 @@ async def list_data_sources(request: Request, _session: SessionDep) -> None:
 
     request_logger.info("Data sources list request received")
 
-    # TODO: Implement data source registry functionality
-    # - Query DataSource model from database
-    # - Return source metadata and health status
-    # - Support filtering by category/type
-
     from fastapi import HTTPException
 
     raise HTTPException(
