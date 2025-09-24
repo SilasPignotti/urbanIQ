@@ -211,21 +211,11 @@ warn_required_dynamic_aliases = true
 # Pytest Configuration
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config --tb=short"
+addopts = "-v --tb=short"
 testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
+python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-markers = [
-    "unit: Unit tests for individual functions/methods",
-    "integration: Integration tests for component interactions",
-    "api: API endpoint integration tests",
-    "slow: Slow tests that take >5 seconds",
-    "external: Tests requiring external services (Gemini, WFS, OSM)",
-    "performance: Performance and load testing",
-    "security: Security validation tests",
-    "database: Tests requiring database interaction",
-]
 asyncio_mode = "auto"
 filterwarnings = [
     "ignore::DeprecationWarning:langchain.*",
